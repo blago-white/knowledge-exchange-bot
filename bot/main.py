@@ -1,13 +1,17 @@
+import logging
+import asyncio
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 import os
-import asyncio
 
 from aiogram import Dispatcher, Bot
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+
+import loggers
 
 
 async def main():
@@ -24,4 +28,7 @@ async def main():
 
 
 if __name__ == '__main__':
+    logging.getLogger('aiogram').setLevel(logging.DEBUG)
+    logging.getLogger('aiogram').addHandler(loggers.ConsoleDebugLogger())
+
     asyncio.run(main())
