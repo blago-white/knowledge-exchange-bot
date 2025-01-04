@@ -10,17 +10,17 @@ from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.redis import RedisStorage
 
+from handlers import ROUTERS
+
 load_dotenv()
 
 import os
 
 
 async def main():
-    dp = Dispatcher(storage=RedisStorage(
-        redis=redis.Redis.from_url(
-            "redis://knowledgeredis:6379/0/"
-        )
-    ))
+    dp = Dispatcher()
+
+    dp.include_routers(*ROUTERS)
 
     bot = Bot(
         token=os.environ.get("BOT_TOKEN"),
