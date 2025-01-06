@@ -1,30 +1,44 @@
+import datetime
+
 import sqlalchemy as sa
 from sqlalchemy.orm import declarative_base, validates, relationship, mapped_column, Mapped
 from sqlalchemy import Column
 
-
-Base = declarative_base()
+from .base import Base
 
 
 class Subject(Base):
     __tablename__ = "subject"
 
-    title: Mapped[str] = mapped_column()
+    worker_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("worker.id", ondelete="CASCADE"),
+    )
+    worker: Mapped["Worker"] = relationship(back_populates="subjects")
+    student: Mapped["Student"] = relationship(back_populates="subject")
+    title: Mapped[str] = mapped_column(sa.String(100))
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.title=})"
 
 
 class Lesson(Base):
     __tablename__ = "lesson"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    worker_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("worker.id", ondelete="SET NULL"),
+    )
+    student_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("student.id", ondelete="SET NULL"),
+    )
 
-    worker_id: Mapped[int] = relationship(sa.ForeignKey("worker.id"))
-    student_id: Mapped[int] = relationship(sa.ForeignKey("student.id"))
-
-    record_link: Mapped[str] = Column(String(200))
+    record_link: Mapped[str] = mapped_column(sa.String(200))
     duration: Mapped[int] = mapped_column()
-    date: Mapped[sa.DateTime] = Column(sa.DateTime(timezone=True))
-    overriten_rate: Mapped[sa.Null | int] = Column(sa.Integer, nullable=True)
-    is_free: Mapped[bool] = Column(sa.Boolean(), default=False)
+    date: Mapped[datetime.datetime] = mapped_column(sa.DateTime(timezone=True))
+    overriten_rate: Mapped[int | None] = mapped_column()
+    is_free: Mapped[bool] = mapped_column(default=False)
+
+    worker: Mapped["Worker"] = relationship(back_populates="lesson")
+    student: Mapped["Student"] = relationship(back_populates="lessons")
 
     @validates("duration")
     def validate_duration(self, key: str, duration: int):
