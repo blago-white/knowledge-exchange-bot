@@ -26,12 +26,17 @@ class Worker(Base):
     )
     meet_link: Mapped[str] = mapped_column(sa.String(MAX_MEET_LINK_LENGTH))
 
-    lesson: Mapped[list["Lesson"]] = relationship(back_populates="worker")
+    lesson: Mapped[list["Lesson"]] = relationship(back_populates="worker",
+                                                  lazy="selectin")
 
-    subjects: Mapped[list["Subject"]] = relationship(back_populates="worker")
+    subjects: Mapped[list["Subject"]] = relationship(back_populates="worker",
+                                                     lazy="selectin")
 
     def __repr__(self):
-        return f"Worker({self.id=}, {self.firstname=}, {self.phone_number=})"
+        try:
+            return f"Worker({self.id=}, {self.firstname=}, {self.phone_number=})"
+        except sa.orm.exc.DetachedInstanceError:
+            return f"Worker(self.id=None, {self.firstname=}, {self.phone_number=})"
 
     @validates("phone_number")
     def validate_phone(self, key: str, number: str):

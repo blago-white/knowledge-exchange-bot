@@ -11,7 +11,7 @@ class Subject(Base):
     __tablename__ = "subject"
 
     worker_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("worker.id", ondelete="CASCADE"),
+        sa.ForeignKey("worker.id", ondelete="CASCADE", onupdate="CASCADE"),
     )
     worker: Mapped["Worker"] = relationship(back_populates="subjects")
     student: Mapped["Student"] = relationship(back_populates="subject")
