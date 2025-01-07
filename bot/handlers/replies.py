@@ -8,3 +8,13 @@ START_MESSAGE = """
 
 🌐 <b> Google meet: </b> <code>{meet_link}</code>
 """
+
+ACCOUNT_DATA_MESSAGE = """
+🙍‍♂️ Ваш профиль, <b>{first_name}</b>
+
+☎ — <code>{phone_number}</code>
+💳 — <code>{bank_card_number}</code>
+🌐 — <code>{meet_link}</code>
+
+— <i>{desctiption}</i>
+"""

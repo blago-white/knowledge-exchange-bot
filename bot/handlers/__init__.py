@@ -1,2 +1,5 @@
-from .messages import *
+from .callback import ROUTERS as CALLBACK_ROUTERS
+from .messages import ROUTERS as MSG_ROUTERS
+
+ROUTERS = CALLBACK_ROUTERS + MSG_ROUTERS
 

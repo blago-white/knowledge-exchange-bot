@@ -1,7 +1,9 @@
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters.command import CommandStart, CommandObject
+
 from ..replies import START_MESSAGE
+from keyboards.inline import get_home_inline_kb
 
 
 router = Router(name=__name__)
@@ -23,5 +25,6 @@ async def start(message: Message,
             total_profit="210.450",
             referals_count=9,
             meet_link="https://meet.google.com/xkf"
-        )
+        ),
+        reply_markup=get_home_inline_kb(),
     )
