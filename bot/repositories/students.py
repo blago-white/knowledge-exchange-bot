@@ -1,12 +1,14 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from models.student import Student
+
 from .base import DefaultModelRepository, BaseModelRepository
 
-from bot.models.student import Student
 
-
-class LessonsModelRepository(DefaultModelRepository):
+class StudentsModelRepository(DefaultModelRepository):
     _model = Student
 
     @BaseModelRepository._provide_db_conn()
     async def create(self, student_data: Student,
-                     session: AsyncSession) -> WorkerModel:
+                     session: AsyncSession) -> Student:
         return await super().create(session=session, data=student_data)

@@ -1,6 +1,8 @@
 from .base import DefaultModelRepository, BaseModelRepository
 
-from bot.models.lesson import Lesson
+from models.lesson import Lesson
+
+from .base import DefaultModelRepository, BaseModelRepository
 
 
 class LessonsModelRepository(DefaultModelRepository):
@@ -8,5 +10,5 @@ class LessonsModelRepository(DefaultModelRepository):
 
     @BaseModelRepository._provide_db_conn()
     async def create(self, lesson_data: Lesson,
-                     session: AsyncSession) -> WorkerModel:
+                     session: AsyncSession) -> Lesson:
         return await super().create(session=session, data=lesson_data)

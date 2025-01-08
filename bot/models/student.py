@@ -9,6 +9,7 @@ from sqlalchemy.orm import (declarative_base,
                             DeclarativeBase)
 from sqlalchemy import Column, text
 
+from .course import StudentWorkerRelation
 from .base import Base
 
 MAX_STUDENT_NAME_LENGTH = 20
@@ -24,27 +25,93 @@ class Student(Base):
     name: Mapped[str] = mapped_column(sa.String(MAX_STUDENT_NAME_LENGTH))
     city: Mapped[str] = mapped_column(sa.String(MAX_CITY_NAME_LENGTH))
     description: Mapped[str] = mapped_column(sa.String(MAX_DESCRIPTION_LENGTH))
-    subject_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("subject.id", ondelete="SET NULL")
-    )
-    rate: Mapped[int]
+    default_rate: Mapped[int]
     registration_date: Mapped[datetime.datetime] = mapped_column(
         sa.DateTime(timezone=True),
         server_default=text("TIMEZONE('utc', now())")
     )
 
+    workers: Mapped[list["Worker"]] = relationship(secondary="student_worker_relation",
+                                                   back_populates="students")
+
     lessons: Mapped[list["Lesson"]] = relationship(back_populates="student")
-    subject: Mapped["Subject"] = relationship(back_populates="student")
+    subjects: Mapped[list["Subject"]] = relationship(back_populates="student")
+    messages: Mapped[list["Message"]] = relationship(back_populates="student",
+                                                     lazy="joined")
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.name=}, {self.city=}, {self.default_rate=})"
 
     @validates("balance")
-    def validate_balance(self, key: str, balance: float):
+    def _validate_balance(self, key: str, balance: float):
         if balance < 0:
             raise ValueError("Balance cannot be < 0")
 
         return balance
 
     @validates("rate")
-    def validate_rate(self, key: str, rate: float):
+    def _validate_rate(self, key: str, rate: float):
+        if not (7000 >= rate >= 100):
+            raise ValueError("Lesson rate must be >=7000 rub. & =>100 rub.")
+
+        return rate
+
+
+class StudentSellOffer(Base):
+    __tablename__ = "student_sell"
+
+    recipient_id: Mapped[int] = mapped_column(sa.ForeignKey(
+        "worker.id", ondelete="SET NULL"
+    ))
+    seller_id: Mapped[int] = mapped_column(sa.ForeignKey(
+        "worker.id", ondelete="SET NULL"
+    ))
+    subject_id: Mapped[int] = mapped_column(sa.ForeignKey(
+        "subject.id", ondelete="SET NULL"
+    ))
+
+    cost: Mapped[int]
+    is_accepted: Mapped[bool] = mapped_column(default=False)
+    is_paid: Mapped[bool] = mapped_column(default=False)
+    paid_sum: Mapped[float] = mapped_column(default=0.0)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime(timezone=True),
+        server_default=text("TIMEZONE('utc', now())")
+    )
+    paid_total_at: Mapped[datetime.datetime | None] = mapped_column(
+        sa.DateTime(timezone=True)
+    )
+
+    recipient: Mapped["Worker"] = relationship(
+        back_populates="income_sell_offers",
+        lazy="joined",
+        foreign_keys=[recipient_id]
+    )
+
+    seller: Mapped["Worker"] = relationship(
+        back_populates="outcome_sell_offers",
+        lazy="joined",
+        foreign_keys=[seller_id]
+    )
+
+    subject: Mapped["Subject"] = relationship(
+        back_populates="sell_offers",
+        lazy="joined",
+        foreign_keys=[subject_id]
+    )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
+    @validates("balance")
+    def _validate_balance(self, key: str, balance: float):
+        if balance < 0:
+            raise ValueError("Balance cannot be < 0")
+
+        return balance
+
+    @validates("rate")
+    def _validate_rate(self, key: str, rate: float):
         if not (7000 >= rate >= 100):
             raise ValueError("Lesson rate must be >=7000 rub. & =>100 rub.")
 

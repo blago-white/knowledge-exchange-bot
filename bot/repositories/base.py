@@ -1,8 +1,11 @@
+from typing import Iterable
+
 from sqlalchemy import select, update
+from sqlalchemy.orm import lazyload, Mapped
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.engine import Connection
 
-from bot.models import DBSessionAccesObject
+from models import DBSessionAccesObject
 
 Model = object
 
@@ -39,10 +42,12 @@ class DefaultModelRepository(BaseModelRepository):
 
     @BaseModelRepository._provide_db_conn()
     async def get(self, session: AsyncSession, pk: int,
-                  with_related: bool = False) -> Model:
-        return (await session.execute(select(self._model).filter_by(
+                  exclude_related_cols: Iterable[Mapped] = tuple()) -> Model:
+        return (await session.execute(select(self._model).options(
+            *[lazyload(e) for e in exclude_related_cols]
+        ).filter_by(
             id=pk
-        ))).scalars().one_or_none()
+        ))).unique().scalars().one_or_none()
 
     @BaseModelRepository._provide_db_conn()
     async def create(self, data: object,
@@ -66,3 +71,4 @@ class DefaultModelRepository(BaseModelRepository):
         )
 
         return await self.get(session=session, pk=pk)
+

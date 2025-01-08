@@ -1,7 +1,9 @@
 from sqlalchemy import Connection
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import (async_sessionmaker,
+                                    AsyncSession,
+                                    create_async_engine)
 
-from . import lesson, student, worker
+from . import dialog, course, lesson, student, worker
 
 
 __all__ = ["DBSessionAccesObject"]
