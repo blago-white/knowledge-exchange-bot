@@ -14,7 +14,7 @@ class BaseModelRepository:
     _model: object
 
     @staticmethod
-    def _provide_db_conn(session: Connection = None, make_commit: bool = False):
+    def provide_db_conn(session: Connection = None, make_commit: bool = False):
         def wrapper(func):
             async def wrapped(*args, **kwargs):
                 use_session = session or DBSessionAccesObject().sessionmaker
@@ -36,11 +36,11 @@ class BaseModelRepository:
 
 
 class DefaultModelRepository(BaseModelRepository):
-    @BaseModelRepository._provide_db_conn()
+    @BaseModelRepository.provide_db_conn()
     async def get_all(self, session: AsyncSession) -> list[Model]:
         return (await session.execute(select(self._model))).scalars().all()
 
-    @BaseModelRepository._provide_db_conn()
+    @BaseModelRepository.provide_db_conn()
     async def get(self, session: AsyncSession, pk: int,
                   exclude_related_cols: Iterable[Mapped] = tuple()) -> Model:
         return (await session.execute(select(self._model).options(
@@ -49,7 +49,7 @@ class DefaultModelRepository(BaseModelRepository):
             id=pk
         ))).unique().scalars().one_or_none()
 
-    @BaseModelRepository._provide_db_conn()
+    @BaseModelRepository.provide_db_conn()
     async def create(self, data: object,
                      session: AsyncSession) -> Model:
         session.add(data)
@@ -60,7 +60,7 @@ class DefaultModelRepository(BaseModelRepository):
 
         return data
 
-    @BaseModelRepository._provide_db_conn(make_commit=True)
+    @BaseModelRepository.provide_db_conn(make_commit=True)
     async def update(self, session: AsyncSession,
                      pk: int,
                      **change_params: dict[str, object]) -> Model:

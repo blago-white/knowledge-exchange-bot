@@ -8,7 +8,7 @@ from .base import DefaultModelRepository, BaseModelRepository
 class StudentsModelRepository(DefaultModelRepository):
     _model = Student
 
-    @BaseModelRepository._provide_db_conn()
+    @BaseModelRepository.provide_db_conn()
     async def create(self, student_data: Student,
                      session: AsyncSession) -> Student:
         return await super().create(session=session, data=student_data)

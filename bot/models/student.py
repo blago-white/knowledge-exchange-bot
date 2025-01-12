@@ -10,18 +10,17 @@ from sqlalchemy.orm import (declarative_base,
 from sqlalchemy import Column, text
 
 from .course import StudentWorkerRelation
-from .base import Base
+from .base import BaseBalanceModel, Base
 
 MAX_STUDENT_NAME_LENGTH = 20
 MAX_CITY_NAME_LENGTH = 30
 MAX_DESCRIPTION_LENGTH = 400
 
 
-class Student(Base):
+class Student(BaseBalanceModel):
     __tablename__ = "student"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    balance: Mapped[float]
     name: Mapped[str] = mapped_column(sa.String(MAX_STUDENT_NAME_LENGTH))
     city: Mapped[str] = mapped_column(sa.String(MAX_CITY_NAME_LENGTH))
     description: Mapped[str] = mapped_column(sa.String(MAX_DESCRIPTION_LENGTH))
@@ -34,20 +33,12 @@ class Student(Base):
     workers: Mapped[list["Worker"]] = relationship(secondary="student_worker_relation",
                                                    back_populates="students")
 
-    lessons: Mapped[list["Lesson"]] = relationship(back_populates="student")
     subjects: Mapped[list["Subject"]] = relationship(back_populates="student")
     messages: Mapped[list["Message"]] = relationship(back_populates="student",
                                                      lazy="joined")
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name=}, {self.city=}, {self.default_rate=})"
-
-    @validates("balance")
-    def _validate_balance(self, key: str, balance: float):
-        if balance < 0:
-            raise ValueError("Balance cannot be < 0")
-
-        return balance
 
     @validates("rate")
     def _validate_rate(self, key: str, rate: float):
@@ -102,13 +93,6 @@ class StudentSellOffer(Base):
 
     def __repr__(self):
         return f"{self.__class__.__name__}()"
-
-    @validates("balance")
-    def _validate_balance(self, key: str, balance: float):
-        if balance < 0:
-            raise ValueError("Balance cannot be < 0")
-
-        return balance
 
     @validates("rate")
     def _validate_rate(self, key: str, rate: float):
