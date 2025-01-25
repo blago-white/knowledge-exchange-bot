@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.student import Student
-
 from .base import DefaultModelRepository, BaseModelRepository
 
 

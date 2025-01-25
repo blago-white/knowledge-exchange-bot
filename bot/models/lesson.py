@@ -27,20 +27,22 @@ class Subject(Base):
     student_id: Mapped[int] = mapped_column(
         sa.ForeignKey("student.id", ondelete="CASCADE", onupdate="CASCADE")
     )
-
     sell_offers: Mapped[list["StudentSellOffer"]] = relationship(
         back_populates="subject",
         lazy="selectin"
     )
     title: Mapped[str] = mapped_column(sa.String(100))
     rate: Mapped[int]
-
     worker: Mapped["Worker"] = relationship(
         back_populates="subjects",
         lazy="joined"
     )
     student: Mapped["Student"] = relationship(
         back_populates="subjects",
+        lazy="selectin"
+    )
+    messages: Mapped[list["Message"]] = relationship(
+        back_populates="subject",
         lazy="selectin"
     )
 

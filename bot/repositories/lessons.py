@@ -16,7 +16,7 @@ class LessonsModelRepository(DefaultModelRepository):
             session: AsyncSession) -> Lesson:
         return await super().create(session=session, data=lesson_data)
 
-    @BaseModelRepository.provide_db_conn(make_commit=False)
+    @BaseModelRepository.provide_db_conn()
     async def bulk_create_lessons(self, session: AsyncSession,
                                   lesson_data: dict,
                                   copies: int):
@@ -32,9 +32,12 @@ class LessonsModelRepository(DefaultModelRepository):
              lesson_dates]
         )
 
-        await session.commit()
-
-        print("AAA", int((await session.execute(select(func.count(Lesson.id)))).scalar()))
+    @BaseModelRepository.provide_db_conn()
+    async def get_course_lessons(self, session: AsyncSession,
+                                 subject_id: int):
+        return (await session.execute(select(self._model).filter_by(
+            subject_id=subject_id
+        ))).scalars()
 
     @BaseModelRepository.provide_db_conn()
     async def get_week_lessons_pay(

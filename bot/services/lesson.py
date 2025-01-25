@@ -1,16 +1,9 @@
-import datetime
-import typing
-
-from .base import BaseService
-
-from models.lesson import Subject, Lesson
-from models.worker import Worker
-from repositories.workers import WorkersRepository
+from models.lesson import Lesson
 from repositories.lessons import LessonsModelRepository
-from repositories.base import BaseModelRepository
+from .base import BaseModelService
 
 
-class WorkersService(BaseService):
+class LessonsService(BaseModelService):
     lessons_model_repository = LessonsModelRepository()
 
     _lesson_id: int | None
@@ -21,10 +14,17 @@ class WorkersService(BaseService):
         self._lessons_repository = (lessons_repository or
                                     self.lessons_model_repository)
 
-    async def bulk_add_lessons(self, lesson: Lesson, count: int) -> int:
-        self._lessons_repository.create(lesson_data=Lesson)
+    @property
+    def repository(self):
+        return self._lessons_repository
 
-        # worker: Worker = await self..get(
+    async def bulk_add_lessons(self, lesson: Lesson, count: int) -> int:
+        await self._lessons_repository.bulk_create_lessons(
+            lesson_data=lesson,
+            copies=count
+        )
+
+        # worker: Worker = await self.get(
         #     session=session,
         #     pk=self._worker_id,
         # )

@@ -1,9 +1,9 @@
 from typing import Iterable
 
 from sqlalchemy import select, update
-from sqlalchemy.orm import lazyload, Mapped
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import lazyload, Mapped
 
 from models import DBSessionAccesObject
 

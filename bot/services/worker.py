@@ -1,16 +1,14 @@
 import datetime
-import typing
-
-from .base import BaseService
 
 from models.lesson import Subject, Lesson
 from models.worker import Worker
-from repositories.workers import WorkersRepository
-from repositories.lessons import LessonsModelRepository
 from repositories.base import BaseModelRepository
+from repositories.lessons import LessonsModelRepository
+from repositories.workers import WorkersRepository
+from .base import BaseModelService
 
 
-class WorkersService(BaseService):
+class WorkersService(BaseModelService):
     workers_model_repository = WorkersRepository()
     lessons_model_repository = LessonsModelRepository()
 
@@ -24,6 +22,10 @@ class WorkersService(BaseService):
                                     self.workers_model_repository)
         self._lessons_repository = (lessons_repository or
                                     self.lessons_model_repository)
+
+    @property
+    def repository(self):
+        return self._workers_repository
 
     async def get_selled_students_count(self) -> int:
         worker: Worker = await self._workers_repository.get(
@@ -48,12 +50,22 @@ class WorkersService(BaseService):
 
         return profit_for_week
 
-    @staticmethod
-    def _get_week_borders() -> tuple[int, int]:
-        today = datetime.datetime.today()
-        start = today - datetime.timedelta(days=today.weekday())
+    async def sell_student(self, buyer_worker_id: int, subject_id: int):
+        ...
 
-        return (
-            start.timestamp(),
-            (start + datetime.timedelta(days=6)).timestamp()
-        )
+    async def get_selled_student_lessons(
+            self, subject_id: int
+    ) -> list["Lesson"]:
+        ...
+
+    async def get_selled_student_status(self, subject_id: int) -> "StudentSellOffer":
+        ...
+
+    async def get_active_subjects(self) -> list["Subject"]:
+        ...
+
+    async def add_message_to_student(self, message: "Message", subject_id: int):
+        ...
+
+    async def get_dialog(self, subject_id: int):
+        ...

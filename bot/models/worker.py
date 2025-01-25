@@ -1,11 +1,13 @@
+import datetime
+
 import sqlalchemy as sa
 from sqlalchemy.orm import declarative_base, validates
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from sqlalchemy import Column
+from sqlalchemy import Column, text
 
 from .course import StudentWorkerRelation
-from .base import BaseBalanceModel
+from .base import BaseBalanceModel, Base
 
 MAX_WORKER_FIRST_NAME_LENGTH = 20
 MAX_WORKER_LAST_NAME_LENGTH = 20
@@ -30,21 +32,23 @@ class Worker(BaseBalanceModel):
     meet_link: Mapped[str] = mapped_column(sa.String(MAX_MEET_LINK_LENGTH))
 
     subjects: Mapped[list["Subject"]] = relationship(back_populates="worker",
-                                                     lazy="joined")
+                                                     lazy="selectin")
     students: Mapped[list["Student"]] = relationship(secondary="student_worker_relation",
                                                      back_populates="workers",
-                                                     lazy="selectin")
-    messages: Mapped[list["Message"]] = relationship(back_populates="worker",
                                                      lazy="selectin")
     income_sell_offers: Mapped[list["StudentSellOffer"]] = relationship(
         back_populates="recipient",
         primaryjoin="Worker.id==StudentSellOffer.recipient_id",
-        lazy="joined"
+        lazy="selectin"
     )
     outcome_sell_offers: Mapped[list["StudentSellOffer"]] = relationship(
         back_populates="seller",
         primaryjoin="Worker.id==StudentSellOffer.seller_id",
-        lazy="joined"
+        lazy="selectin"
+    )
+    withdraws: Mapped[list["Withdraw"]] = relationship(
+        back_populates="worker",
+        lazy="selectin"
     )
 
     def __repr__(self):
@@ -72,3 +76,22 @@ class Worker(BaseBalanceModel):
             raise ValueError(f"Card number can contain only digits")
 
         return number
+
+
+class Withdraw(Base):
+    worker_id: Mapped[int] = mapped_column(sa.ForeignKey(
+        "worker.id",
+        ondelete="CASCADE"
+    ))
+
+    amount: Mapped[float]
+
+    is_processed: Mapped[bool] = mapped_column(default=False)
+
+    date: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime(timezone=True),
+        server_default=text("TIMEZONE('utc', now())")
+    )
+
+    worker: Mapped[Worker] = relationship(back_populates="withdraws",
+                                          lazy="joined")

@@ -1,9 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import Mapped, selectinload, joinedload
+from sqlalchemy.orm import Mapped
 
 from models.worker import Worker as WorkerModel
-from models.lesson import Lesson, Subject
 from .base import DefaultModelRepository, BaseModelRepository
 from .transfer.workers import Worker
 

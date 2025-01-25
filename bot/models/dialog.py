@@ -21,11 +21,8 @@ class SenderType(Enum):
 class Message(Base):
     __tablename__ = "dialog_message"
 
-    worker_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("worker.id", ondelete="SET NULL")
-    )
-    student_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("student.id", ondelete="SET NULL")
+    subject_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("subject.id", ondelete="SET NULL")
     )
     sended_at: Mapped[datetime.datetime] = mapped_column(
         sa.DateTime(timezone=True),
@@ -34,5 +31,7 @@ class Message(Base):
     sender: Mapped[SenderType]
     text: Mapped[str] = mapped_column(sa.String(4096))
 
-    worker: Mapped["Worker"] = relationship(back_populates="messages")
-    student: Mapped["Student"] = relationship(back_populates="messages")
+    subject: Mapped["Subject"] = relationship(
+        back_populates="messages",
+        lazy="joined"
+    )

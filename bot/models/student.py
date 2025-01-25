@@ -31,11 +31,11 @@ class Student(BaseBalanceModel):
     )
 
     workers: Mapped[list["Worker"]] = relationship(secondary="student_worker_relation",
-                                                   back_populates="students")
+                                                   back_populates="students",
+                                                   lazy="selectin")
 
-    subjects: Mapped[list["Subject"]] = relationship(back_populates="student")
-    messages: Mapped[list["Message"]] = relationship(back_populates="student",
-                                                     lazy="joined")
+    subjects: Mapped[list["Subject"]] = relationship(back_populates="student",
+                                                     lazy="selectin")
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name=}, {self.city=}, {self.default_rate=})"
