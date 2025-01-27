@@ -14,7 +14,6 @@ class WorkersRepository(DefaultModelRepository):
         return [
             "subjects",
             "students",
-            "messages",
             "income_sell_offers",
             "outcome_sell_offers"
         ]
@@ -47,3 +46,21 @@ class WorkersRepository(DefaultModelRepository):
         session.add(worker)
 
         await session.commit()
+
+    async def _validate_phone(self, phone: str):
+        phone = phone.replace(" ", "")
+
+        if not (15 > len(phone) > 10):
+            raise Exception("Телефон слишком короткий")
+
+        if not phone.replace("+", "").isdigit():
+            raise Exception("Телефон не должен содержать букв и символов")
+
+    async def _validate_meet_link(self, link: str):
+        link = link.replace(" ", "")
+
+        if "https://" not in link:
+            raise Exception("Ссылка нерабочая [нет 'https://']")
+
+        if len(link) < 10:
+            raise Exception("Ссылка слишком короткая")

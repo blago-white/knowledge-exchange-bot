@@ -60,15 +60,23 @@ class DefaultModelRepository(BaseModelRepository):
 
         return data
 
-    @BaseModelRepository.provide_db_conn(make_commit=True)
+    @BaseModelRepository.provide_db_conn()
     async def update(self, session: AsyncSession,
                      pk: int,
                      **change_params: dict[str, object]) -> Model:
+        for k in change_params.keys():
+            try:
+                getattr(self, f"_validate_{k}")(change_params[k])
+            except AttributeError:
+                pass
+
         await session.execute(
             update(self._model).where(self._model.id == pk).values(
                 **change_params
             )
         )
+
+        await session.commit()
 
         return await self.get(session=session, pk=pk)
 

@@ -20,16 +20,26 @@ class Worker(BaseBalanceModel):
     __tablename__ = "worker"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
-    phone_number: Mapped[str | None] = mapped_column(nullable=True)
+    phone_number: Mapped[str | None] = mapped_column(
+        nullable=True,
+    )
     firstname: Mapped[str] = mapped_column(
         sa.String(MAX_WORKER_FIRST_NAME_LENGTH))
     lastname: Mapped[str] = mapped_column(
-        sa.String(MAX_WORKER_LAST_NAME_LENGTH))
-    description: Mapped[str] = mapped_column(sa.String(MAX_DESCRIPTION_LENGTH))
-    bank_card_number: Mapped[str | None] = mapped_column(
-        sa.String(CARD_NUMBER_LENGTH), nullable=True
+        sa.String(MAX_WORKER_LAST_NAME_LENGTH)
     )
-    meet_link: Mapped[str] = mapped_column(sa.String(MAX_MEET_LINK_LENGTH))
+    description: Mapped[str] = mapped_column(
+        sa.String(MAX_DESCRIPTION_LENGTH),
+        nullable=True
+    )
+    bank_card_number: Mapped[str | None] = mapped_column(
+        sa.String(CARD_NUMBER_LENGTH),
+        nullable=True,
+    )
+    meet_link: Mapped[str] = mapped_column(
+        sa.String(MAX_MEET_LINK_LENGTH),
+        nullable=True,
+    )
 
     subjects: Mapped[list["Subject"]] = relationship(back_populates="worker",
                                                      lazy="selectin")
@@ -79,6 +89,8 @@ class Worker(BaseBalanceModel):
 
 
 class Withdraw(Base):
+    __tablename__ = "withdraw"
+
     worker_id: Mapped[int] = mapped_column(sa.ForeignKey(
         "worker.id",
         ondelete="CASCADE"

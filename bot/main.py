@@ -37,12 +37,12 @@ async def run_bot():
 
 async def init_db_connection():
     engine = create_async_engine(
-        # url="postgresql+asyncpg://vmerinov:270407020104$sPg%Gettr_5o0e@localhost:5432/jackdropdb",
-        url=("postgresql+asyncpg://"
-             f"{os.environ.get('POSTGRES_USER')}:"
-             f"{os.environ.get('POSTGRES_PASSWORD')}@"
-             f"{os.environ.get('POSTGRES_HOST')}/"
-             f"{os.environ.get('POSTGRES_DB')}"),
+        url="postgresql+asyncpg://vmerinov:270407020104$sPg%Gettr_5o0e@localhost:5432/jackdropdb",
+        # url=("postgresql+asyncpg://"
+        #      f"{os.environ.get('POSTGRES_USER')}:"
+        #      f"{os.environ.get('POSTGRES_PASSWORD')}@"
+        #      f"{os.environ.get('POSTGRES_HOST')}/"
+        #      f"{os.environ.get('POSTGRES_DB')}"),
         echo=True,
         hide_parameters=False
     )
@@ -52,7 +52,7 @@ async def init_db_connection():
 
     from repositories import test
 
-    await test.init_data(engine=engine, initialize_models=True)
+    await test.init_data(engine=engine, initialize_models=True, initialize_data=False)
 
 
 async def main():

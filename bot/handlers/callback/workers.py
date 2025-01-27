@@ -5,12 +5,17 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from keyboards.inline import get_home_inline_kb, get_profile_inline_kb
-from repositories.workers import WorkersRepository
+from services.worker import WorkersService
 from models.worker import Worker
 
-from ..callback.utils.data import RenderProfileData
+from ..callback.utils.data import (RenderProfileData,
+                                   UpdateProfileInfoData,
+                                   ProfileUpdateField)
+from ..common.utils.messages import generate_main_stats_message_text
 from ..replies import ACCOUNT_DATA_MESSAGE, START_MESSAGE
-from ..providers import provide_model_repository
+from ..providers import provide_model_service
+from ..states import profile as profile_states
+from ..messages.common import start
 
 
 router = Router(name=__name__)
@@ -19,22 +24,26 @@ router = Router(name=__name__)
 @router.callback_query(RenderProfileData.filter(
     F.show_profile != None
 ))
-@provide_model_repository(WorkersRepository)
+@provide_model_service(WorkersService)
 async def render_profile(
         query: CallbackQuery,
         callback_data: CallbackData,
         state: FSMContext,
-        workers_repository: WorkersRepository):
-    if callback_data.show_profile:
-        worker: Worker = await workers_repository.get(pk=query.message.chat.id)
+        workers_service: WorkersService):
+    print("PROFILE1", query.message.chat.id)
 
+    worker: Worker = await workers_service.repository.get(
+        pk=query.message.chat.id
+    )
+
+    if callback_data.show_profile:
         await query.bot.edit_message_text(
             text=ACCOUNT_DATA_MESSAGE.format(
                 first_name=worker.firstname,
-                bank_card_number=worker.bank_card_number,
-                meet_link=worker.meet_link,
-                phone_number=worker.phone_number,
-                desctiption=worker.description
+                bank_card_number=worker.bank_card_number or "Здесь карта для выплат!",
+                meet_link=worker.meet_link or "А по этой ссылке ученики зайдут на урок!",
+                phone_number=worker.phone_number or "Тут будет ваш телефон)",
+                desctiption=worker.description or "Описание скоро будет здесь..."
             ),
             message_id=query.message.message_id,
             chat_id=query.message.chat.id,
@@ -42,15 +51,37 @@ async def render_profile(
         )
     else:
         await query.bot.edit_message_text(
-            text=START_MESSAGE.format(
-                user_id=query.message.chat.id,
-                selled_students=39,
-                week_profit="40.500",
-                total_profit="210.450",
-                referals_count=9,
-                meet_link="https://meet.google.com/xkf"
+            text=await generate_main_stats_message_text(
+                template=START_MESSAGE,
+                workers_service=workers_service,
+                worker=worker
             ),
             reply_markup=get_home_inline_kb(),
             message_id=query.message.message_id,
             chat_id=query.message.chat.id,
         )
+
+
+@router.callback_query(UpdateProfileInfoData.filter(
+    F.update_field != None
+))
+async def update_profile_info(
+        query: CallbackQuery,
+        callback_data: UpdateProfileInfoData,
+        state: FSMContext):
+    try:
+        await state.set_state(
+            profile_states.UpdateProfileData.from_callback_data(
+                callback_data=callback_data
+            )
+        )
+    except KeyError:
+        return await query.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="❌ Пока невозможно обновить данные"
+        )
+
+    await query.bot.send_message(
+        chat_id=query.message.chat.id,
+        text="☑ Отправьте новое значение"
+    )

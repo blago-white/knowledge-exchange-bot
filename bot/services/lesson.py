@@ -18,12 +18,6 @@ class LessonsService(BaseModelService):
     def repository(self):
         return self._lessons_repository
 
-    async def bulk_add_lessons(self, lesson: Lesson, count: int) -> int:
-        await self._lessons_repository.bulk_create_lessons(
-            lesson_data=lesson,
-            copies=count
-        )
-
         # worker: Worker = await self.get(
         #     session=session,
         #     pk=self._worker_id,

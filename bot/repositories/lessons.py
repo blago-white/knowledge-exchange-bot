@@ -1,9 +1,11 @@
 import datetime
+import typing
 
 from sqlalchemy import select, func, Integer, not_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.lesson import Lesson, Subject
+
 from .base import DefaultModelRepository, BaseModelRepository
 
 
@@ -33,10 +35,35 @@ class LessonsModelRepository(DefaultModelRepository):
         )
 
     @BaseModelRepository.provide_db_conn()
+    async def get_completed_lessons_payment_amount(
+            self, subjects: typing.Collection[Subject],
+            session: AsyncSession
+    ) -> list[Lesson]:
+        return (await session.execute(select(
+            func.sum(
+                (self._model.duration/60)*Subject.rate
+            )
+        ).filter(
+            self._model.is_completed is True,
+            Subject.id.in_([subject.id for subject in subjects])
+        ))).scalar() or 0
+
+    @BaseModelRepository.provide_db_conn()
     async def get_course_lessons(self, session: AsyncSession,
                                  subject_id: int):
         return (await session.execute(select(self._model).filter_by(
             subject_id=subject_id
+        ))).scalars()
+
+    @BaseModelRepository.provide_db_conn()
+    async def get_lessons_for_period(self, subject_id: int,
+                                     start: datetime.datetime,
+                                     end: datetime.datetime):
+        return (await session.execute(select(self._model).filter_by(
+            subject_id=subject_id,
+        ).where(
+            Lesson.date >= start,
+            Lesson.date <= end
         ))).scalars()
 
     @BaseModelRepository.provide_db_conn()
@@ -70,7 +97,4 @@ class LessonsModelRepository(DefaultModelRepository):
         today = datetime.date.today()
         start = today - datetime.timedelta(days=today.weekday())
 
-        return (
-            start,
-            (start + datetime.timedelta(days=7))
-        )
+        return start, (start + datetime.timedelta(days=7))
