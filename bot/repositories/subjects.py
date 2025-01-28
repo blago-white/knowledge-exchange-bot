@@ -17,10 +17,17 @@ class SubjectsModelRepository(DefaultModelRepository):
     async def worker_has_subject(self, worker_id: int,
                                  subject_id: int,
                                  session: AsyncSession) -> bool:
-        return (await session.execute(select(
+        return await session.scalar(select(
             self._model.id,
             self._model.worker_id,
         ).filter_by(
             worker_id=worker_id,
             id=subject_id,
-        ).exists())).scalars()
+        ))
+
+    @BaseModelRepository.provide_db_conn()
+    async def get_all_for_worker(self, worker_id: int,
+                                 session: AsyncSession) -> list[Subject]:
+        return list((await session.execute(select(self._model).filter_by(
+            worker_id=worker_id
+        ))).scalars())

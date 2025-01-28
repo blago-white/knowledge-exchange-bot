@@ -20,7 +20,6 @@ class LessonsService(BaseModelService):
 
         super.__init__(*args, **kwargs)
 
-
         # worker: Worker = await self.get(
         #     session=session,
         #     pk=self._worker_id,
@@ -36,6 +35,7 @@ class LessonsService(BaseModelService):
 class SubjectsService(BaseModelService):
     _repository = SubjectsModelRepository()
 
+    _subject_id: int = None
     _subject_title: str | None
 
     def __init__(self, *args,
@@ -51,7 +51,38 @@ class SubjectsService(BaseModelService):
     def repository(self):
         return self._repository
 
+    @property
+    def subject_id(self):
+        return self._subject_id
+
+    @subject_id.setter
+    def subject_id(self, subject_id):
+        self._subject_id = subject_id
+
+    async def retrieve(self, worker_id: int):
+        if await self.repository.worker_has_subject(
+            subject_id=self._subject_id, worker_id=worker_id
+        ):
+            return await self.repository.get(pk=self._subject_id)
+
+        raise ValueError("You is not owner!")
+
     async def initialize(self, data: SubjectsInitializingData) -> int:
         return (await self._repository.create(
             subject_data=Subject(**data.__dict__)
         )).id
+
+    async def get_lessons(self, worker_id: int):
+        if await self.repository.worker_has_subject(
+            subject_id=self._subject_id, worker_id=worker_id
+        ):
+            return (await self.repository.get(
+                pk=self._subject_id,
+                exclude_related_cols=[
+                    Subject.sell_offers,
+                    Subject.messages,
+                    Subject.student,
+                ]
+            )).lessons
+
+        raise ValueError("You is not owner!")

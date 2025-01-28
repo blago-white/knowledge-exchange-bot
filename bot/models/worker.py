@@ -19,7 +19,9 @@ MAX_MEET_LINK_LENGTH = 100
 class Worker(BaseBalanceModel):
     __tablename__ = "worker"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+    id: Mapped[int] = mapped_column(sa.BigInteger(),
+                                    primary_key=True,
+                                    autoincrement=False)
     phone_number: Mapped[str | None] = mapped_column(
         nullable=True,
     )

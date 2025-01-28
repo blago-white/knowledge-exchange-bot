@@ -25,21 +25,25 @@ async def start(message: Message,
                 student_id = int(command.args.replace(
                     " ", ""
                 ).split("=")[-1])
+
+                if not student_id:
+                    raise Exception
             except ValueError:
                 return await message.reply("❌ Вам была дана некорректная ссылка!")
 
             students_service.telegram_id = message.chat.id
+
             students_service.student_id = student_id
 
             try:
                 await students_service.connect_student_telegram()
-            except:
+            except Exception as e:
+                print(repr(e), e)
                 return await message.reply("😄 Кажется вы уже зарегистрированы")
 
             return await message.bot.send_message(
                 chat_id=message.chat.id,
-                text=f"🔰 Рады вас видеть, {message.from_user.username}, "
-                     f"ваш учитель - {'Иван'} увидел что вы присоединились)"
+                text=f"🔰 Рады вас видеть, {message.from_user.first_name}"
             )
 
     is_created, worker = await workers_service.get_or_create(

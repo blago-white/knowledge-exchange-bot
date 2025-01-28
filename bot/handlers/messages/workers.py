@@ -101,7 +101,8 @@ async def register_student(message: Message,
             chat_id=message.chat.id,
             text="❇<b>Поздравляем, ученик добавлен! Удачных уроков!</b>\n\n"
                  f"А чтобы и ему(ей) было удобно, "
-                 f"попросите перейти в этот бот по специальной, вашей ссылке:"
+                 f"и чтобы вы смогли продать ученика,"
+                 f"попросите перейти в этот бот по такой ссылке:"
                  f"\n"
                  f"<code>t.me/ZnanieExBot?start=student={student_id}</code>"
         )

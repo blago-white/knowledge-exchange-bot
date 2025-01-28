@@ -52,7 +52,7 @@ async def init_db_connection():
 
     from repositories import test
 
-    await test.init_data(engine=engine, initialize_models=True, initialize_data=False)
+    await test.init_data(engine=engine, initialize_models=True, initialize_data=True)
 
 
 async def main():

@@ -23,8 +23,8 @@ class StudentsService(BaseModelService):
         return self._student_id
 
     @telegram_id.setter
-    def telegram_id(self, sid: int):
-        self._telegram_id = sid
+    def telegram_id(self, tid: int):
+        self._telegram_id = tid
 
     @student_id.setter
     def student_id(self, sid: int):
@@ -38,7 +38,7 @@ class StudentsService(BaseModelService):
         return result.id
 
     async def connect_student_telegram(self):
-        if not self._telegram_id or self._student_id:
+        if not (self._telegram_id and self._student_id):
             raise ValueError("Cannot connect tg id, `_telegram_id` and "
                              "`_student_id` must be setted")
 

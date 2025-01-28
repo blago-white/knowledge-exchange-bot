@@ -18,6 +18,12 @@ class WeekDay(Enum):
     SUNDAY = "SU"
 
 
+class LessonStatus(Enum):
+    SUCCESS = "S"
+    CANCELED = "C"
+    SCHEDULED = "H"
+
+
 class Subject(Base):
     __tablename__ = "subject"
 
@@ -33,6 +39,13 @@ class Subject(Base):
     )
     title: Mapped[str] = mapped_column(sa.String(100))
     rate: Mapped[int]
+    description: Mapped[str | None] = mapped_column(
+        sa.String(500),
+        nullable=True
+    )
+    is_active: Mapped[bool] = mapped_column(
+        default=True
+    )
     worker: Mapped["Worker"] = relationship(
         back_populates="subjects",
         lazy="joined"
@@ -80,6 +93,7 @@ class Lesson(Base):
     overriten_rate: Mapped[int | None]
     is_free: Mapped[bool] = mapped_column(default=False)
     is_completed: Mapped[bool] = mapped_column(default=False)
+    status: Mapped[LessonStatus] = mapped_column(default=LessonStatus.SCHEDULED)
 
     subject: Mapped[Subject] = relationship(
         back_populates="lessons",
