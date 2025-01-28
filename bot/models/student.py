@@ -20,7 +20,8 @@ MAX_DESCRIPTION_LENGTH = 400
 class Student(BaseBalanceModel):
     __tablename__ = "student"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    telegram_id: Mapped[int | None]
     name: Mapped[str] = mapped_column(sa.String(MAX_STUDENT_NAME_LENGTH))
     city: Mapped[str] = mapped_column(sa.String(MAX_CITY_NAME_LENGTH))
     description: Mapped[str] = mapped_column(sa.String(MAX_DESCRIPTION_LENGTH))

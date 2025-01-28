@@ -5,6 +5,7 @@ from aiogram.filters.callback_data import CallbackQuery
 from functools import wraps
 
 from services.base import BaseModelService
+from services.worker import WorkersService
 
 
 def _convert_class_name(class_name: str) -> str:
@@ -19,8 +20,6 @@ def provide_model_service(*services: list[BaseModelService]):
     def wrapper(func):
         @wraps(func)
         async def wrapped(*args, **kwargs):
-            print("WRAPPED")
-
             try:
                 message: Message = kwargs.get(
                     "message", [a for a in args if a.__class__ is Message][0]
@@ -36,8 +35,10 @@ def provide_model_service(*services: list[BaseModelService]):
 
             return await func(
                 *args, **(kwargs | {
-                    _convert_class_name(class_name=r): r(
-                        worker_id=message.chat.id
+                    _convert_class_name(class_name=r): (
+                        r(worker_id=message.chat.id)
+                        if r is WorkersService else
+                        r()
                     )
                     for r in services
                 })
