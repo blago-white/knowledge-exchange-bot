@@ -36,3 +36,8 @@ class StudentProfileData(CallbackData, prefix="student"):
 
 class GetSubjectLessonsData(CallbackData, prefix="subject-lessons"):
     subject_id: int
+    only_show_legend: bool = False
+
+
+class ShowLessonInfoData(CallbackData, prefix="lesson-info"):
+    lesson_id: int

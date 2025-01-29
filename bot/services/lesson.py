@@ -18,7 +18,23 @@ class LessonsService(BaseModelService):
         self._lesson_id = lesson_id
         self._repository = lessons_repository or self._repository
 
-        super.__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def lesson_id(self):
+        return self._lesson_id
+
+    @lesson_id.setter
+    def lesson_id(self, new_lesson_id: int):
+        self._lesson_id = new_lesson_id
+
+    async def retrieve(self, worker_id: int):
+        lesson: Lesson = await self._repository.get(pk=self._lesson_id)
+
+        if not lesson.subject.worker_id == worker_id:
+            raise ValueError("Cannot retrieve this lesson!")
+
+        return lesson
 
         # worker: Worker = await self.get(
         #     session=session,

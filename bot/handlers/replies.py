@@ -18,3 +18,11 @@ ACCOUNT_DATA_MESSAGE = """
 
 — <i>{desctiption}</i>
 """
+
+LESSON_DATA_MESSAGE = """
+📚 <b>Урок {free_label} от {date} </b>
+<i>⏳ {duration}</i>
+<i>{status}</i>
+
+<i>Запись — </i>{record_link}
+"""

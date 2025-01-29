@@ -1,4 +1,5 @@
 import datetime
+import pytz
 from enum import Enum
 
 import sqlalchemy as sa
@@ -106,6 +107,23 @@ class Lesson(Base):
                 f"{self.date=}, "
                 f"{self.duration=}min"
                 f")")
+
+    @property
+    def display_duration(self) -> str:
+        try:
+            return f"{self.duration}мин."
+        except:
+            return
+
+    @property
+    def display_date(self) -> str:
+        lesson_datetime_format = "%m.%d %H:%M"
+        lesson_date_msc = self.date.astimezone(pytz.timezone("Europe/Moscow"))
+
+        try:
+            return lesson_date_msc.strftime(lesson_datetime_format)
+        except:
+            return
 
     @validates("duration")
     def _validate_duration(self, key: str, duration: int):

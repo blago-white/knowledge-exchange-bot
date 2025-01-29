@@ -1,32 +1,26 @@
 from aiogram import F
-from aiogram.filters import and_f
 from aiogram.dispatcher.router import Router
 from aiogram.filters.callback_data import CallbackData, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
 
 from keyboards.inline import (get_home_inline_kb,
                               get_profile_inline_kb,
                               get_subjects_table_kb,
                               get_subject_details_kb,
                               get_subject_lessons_kb)
-from services.worker import WorkersService
-from services.lesson import SubjectsService, Subject
 from models.worker import Worker
-
+from services.lesson import SubjectsService, Subject
+from services.worker import WorkersService
 from ..callback.utils.data import (RenderProfileData,
                                    UpdateProfileInfoData,
-                                   ProfileUpdateField,
                                    GetWorkerSubjectsData,
                                    TO_HOME_DATA,
                                    StudentProfileData,
-                                   WorkerSubjectsFilters,
                                    GetSubjectLessonsData)
 from ..common.utils.messages import generate_main_stats_message_text
-from ..replies import ACCOUNT_DATA_MESSAGE, START_MESSAGE
 from ..providers import provide_model_service
+from ..replies import ACCOUNT_DATA_MESSAGE, START_MESSAGE
 from ..states import profile as profile_states
-from ..messages.common import start
 
 router = Router(name=__name__)
 
@@ -117,7 +111,8 @@ async def update_profile_info(
         subjects_service: SubjectsService):
     await query.answer()
 
-    subjects: list[Subject] = await subjects_service.repository.get_all_for_worker(
+    subjects: list[
+        Subject] = await subjects_service.repository.get_all_for_worker(
         worker_id=query.message.chat.id
     )
 
@@ -151,22 +146,23 @@ async def show_subject_profile(
             worker_id=query.message.chat.id
         )
     except Exception as e:
-        return await query.answer("Вы не можете просмотреть профиль этого ученика!")
+        return await query.answer(
+            "Вы не можете просмотреть профиль этого ученика!")
     else:
         await query.answer()
 
     await query.message.edit_text(
         text=f"📍 <b>{subject.student.name} [{subject.student.city}]</b>\n"
-             f"{"" if subject.student.telegram_id else 
-                "🔓"+"<code>t.me/ZnanieExBot?start=student="+str(subject.student.id)+"</code>\n"
-                }\n"
+             f"{"" if subject.student.telegram_id else
+             "🔓" + "<code>t.me/ZnanieExBot?start=student=" + str(subject.student.id) + "</code>\n"
+             }\n"
              f"📕 Предмет — <i>{subject.title}\n"
              f"🕑 Ставка — {subject.rate}₽/ч</i>\n"
              f"👤 О ученике — <i>{
-                subject.student.description or 'пока ничего не известно('
+             subject.student.description or 'пока ничего не известно('
              }</i>\n\n"
              f"<i>{
-                "— "+(subject.description or "Кажется, заметок еще нет!")
+             "— " + (subject.description or "Кажется, заметок еще нет!")
              }</i>",
         reply_markup=get_subject_details_kb(subject=subject)
     )
@@ -181,6 +177,13 @@ async def show_subject_lessons(
         callback_data: GetSubjectLessonsData,
         state: FSMContext,
         subjects_service: SubjectsService):
+    if callback_data.only_show_legend:
+        return await query.answer(
+            "!ВРЕМЯ-МСК!\n"
+            "☑ — Урок запланирован\n"
+            "⁉ — Урок уже должен был начаться\n"
+        )
+
     subjects_service.subject_id = callback_data.subject_id
 
     try:
@@ -195,8 +198,7 @@ async def show_subject_lessons(
     else:
         await query.answer()
 
-    await query.message.edit_text(
-        text=query.message.text + "\n\n<i>🔽 Часовой пояс уроков ниже - мск 🔽</i>",
+    await query.message.edit_reply_markup(
         reply_markup=get_subject_lessons_kb(
             subject_id=callback_data.subject_id,
             lessons=lessons

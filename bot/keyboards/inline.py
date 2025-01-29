@@ -11,7 +11,8 @@ from handlers.callback.utils.data import (TO_HOME_DATA,
                                           GetWorkerSubjectsData,
                                           WorkerSubjectsFilters,
                                           StudentProfileData,
-                                          GetSubjectLessonsData)
+                                          GetSubjectLessonsData,
+                                          ShowLessonInfoData)
 
 from models.lesson import Lesson, Subject, LessonStatus
 
@@ -125,12 +126,7 @@ def get_subject_details_kb(subject: Subject):
 
 
 def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson]):
-    # ✅ 10.01 12:30 0.5ч
-    # ❌ 10.01 18:550.5ч
-    # ☑ 10.01 20:10 0.5ч
-
     lessons_kb, lessons_kb_row = [], []
-    lesson_datetime_format = "%m.%d %H:%M"
 
     LESSON_STATUSES = {
         LessonStatus.SUCCESS: "✅",
@@ -139,19 +135,18 @@ def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson]):
     }
 
     for lesson in lessons:
-        lesson_date_utc: datetime.datetime = lesson.date
-        lesson_date_msc = lesson_date_utc.astimezone(pytz.timezone("Europe/Moscow"))
-
         lesson_status = LESSON_STATUSES[lesson.status]
 
-        if lesson.status == LessonStatus.SCHEDULED and datetime.datetime.now(tz=pytz.UTC) > lesson_date_utc:
+        if lesson.status == LessonStatus.SCHEDULED and datetime.datetime.now(tz=pytz.UTC) > lesson.date:
             lesson_status = "⁉"
 
         lessons_kb_row.append(InlineKeyboardButton(
             text=f"{lesson_status} "
-                 f"{lesson_date_msc.strftime(lesson_datetime_format)} МСК "
-                 f"{lesson.duration/60}ч",
-            callback_data="None"
+                 f"{lesson.display_date} "
+                 f"{lesson.display_duration}",
+            callback_data=ShowLessonInfoData(
+                lesson_id=lesson.id
+            ).pack()
         ))
 
         if len(lessons_kb_row) == 3:
@@ -164,7 +159,39 @@ def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson]):
         inline_keyboard=[
             *lessons_kb,
             [InlineKeyboardButton(
-                text="👤⬅ Обратно",
+                text="👤⬅ К ученику",
+                callback_data=StudentProfileData(
+                    subject_id=subject_id
+                ).pack()
+            ), InlineKeyboardButton(
+                text="❓Что это обозначает?",
+                callback_data=GetSubjectLessonsData(
+                    subject_id=subject_id,
+                    only_show_legend=True
+                ).pack()
+            )],
+            [InlineKeyboardButton(
+                text="📕⬅ К списку учеников",
+                callback_data=GetWorkerSubjectsData(
+                    filter=WorkerSubjectsFilters.ALL
+                ).pack()
+            ), InlineKeyboardButton(
+                text="⬅ К меню",
+                callback_data=TO_HOME_DATA
+            )],
+        ]
+    )
+
+
+def get_lesson_data_inline_kb(subject_id: int):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="👥 Учитель",
+                callback_data="None"
+            )],
+            [InlineKeyboardButton(
+                text="👤⬅ К ученику",
                 callback_data=StudentProfileData(
                     subject_id=subject_id
                 ).pack()
