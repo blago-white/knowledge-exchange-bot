@@ -14,6 +14,12 @@ class StudentsModelRepository(DefaultModelRepository):
         return await super().create(session=session, data=student_data)
 
     @BaseModelRepository.provide_db_conn()
+    async def get_by_telegram(self, telegram_id: int, session: AsyncSession):
+        return (await session.execute(select(self._model).filter_by(
+            telegram_id=telegram_id
+        ))).unique().scalars().one_or_none()
+
+    @BaseModelRepository.provide_db_conn()
     async def drop_unauthorized(
             self, student_id: int,
             session: AsyncSession

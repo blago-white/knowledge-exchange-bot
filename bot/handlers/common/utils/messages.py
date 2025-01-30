@@ -1,5 +1,6 @@
 from models.worker import Worker
 from models.lesson import Lesson, LessonStatus
+from models.student import Student
 from services.worker import WorkersService
 
 
@@ -38,4 +39,24 @@ def generate_lesson_data_message_text(
         date=lesson.display_date,
         duration=lesson.display_duration,
         record_link=lesson.record_link or "<i>Упс... Запись не прекреплена</i>"
+    )
+
+
+def generate_student_main_message(template: str,
+                                  next_lesson_template: str,
+                                  next_lesson: Lesson,
+                                  student: Student,
+                                  meet_link: str = None):
+    if next_lesson:
+        next_lesson_template = next_lesson_template.format(
+            next_lesson_date=next_lesson.display_date,
+            next_lesson_subject=next_lesson.subject.title,
+            next_lesson_duration=next_lesson.display_duration,
+            meet_link=meet_link or "<i>Ссылки на звонок нет...Свяжитесь с преподавателем</i>"
+        )
+
+    return template.format(
+        student_name=student.name,
+        balance=int(student.balance),
+        next_lesson=next_lesson_template
     )

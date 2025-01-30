@@ -1,4 +1,6 @@
 import datetime
+
+from uuid import UUID
 import sqlalchemy as sa
 
 from sqlalchemy.orm import (declarative_base,
@@ -7,7 +9,7 @@ from sqlalchemy.orm import (declarative_base,
                             Mapped,
                             mapped_column,
                             DeclarativeBase)
-from sqlalchemy import Column, text
+from sqlalchemy import Column, text, func
 
 from .course import StudentWorkerRelation
 from .base import BaseBalanceModel, Base
@@ -15,6 +17,16 @@ from .base import BaseBalanceModel, Base
 MAX_STUDENT_NAME_LENGTH = 20
 MAX_CITY_NAME_LENGTH = 30
 MAX_DESCRIPTION_LENGTH = 400
+
+
+class StudentPairRequest(Base):
+    __tablename__ = "student_pair_request"
+
+    id: Mapped[UUID] = mapped_column(
+        primary_key=True,
+        server_default=func.gen_random_uuid()
+    )
+    student_id: Mapped[int] = mapped_column(unique=True)
 
 
 class Student(BaseBalanceModel):

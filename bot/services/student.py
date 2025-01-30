@@ -1,5 +1,11 @@
-from models.student import Student
+import asyncio
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, delete
+
+from models.student import Student, StudentPairRequest
 from repositories.students import StudentsModelRepository
+from repositories.base import BaseModelRepository
 
 from .transfer.student import StudentInitializingData
 from .base import BaseModelService
@@ -7,6 +13,7 @@ from .base import BaseModelService
 
 class StudentsService(BaseModelService):
     _repository = StudentsModelRepository()
+    _student_ref_tokens_model = StudentPairRequest
     _student_id: int | None
     _telegram_id: int | None
 
@@ -30,6 +37,39 @@ class StudentsService(BaseModelService):
     def student_id(self, sid: int):
         self._student_id = sid
 
+    @BaseModelRepository.provide_db_conn()
+    async def ref_token_exists(self, ref_token: str = None, session: AsyncSession = None):
+        try:
+            return (await session.execute(
+                select(self._student_ref_tokens_model).filter_by(
+                    student_id=self._student_id
+                )
+            )).unique().scalars().one_or_none()
+        except:
+            try:
+                return (await session.execute(
+                    select(self._student_ref_tokens_model).filter_by(
+                        id=ref_token
+                    )
+                )).unique().scalars().one_or_none()
+            except:
+                return
+
+    @BaseModelRepository.provide_db_conn()
+    async def generate_ref_token(self, session: AsyncSession):
+        if await self.ref_token_exists():
+            raise ValueError("Ref Token exists")
+
+        new_request = StudentPairRequest(student_id=self._student_id)
+
+        session.add(new_request)
+
+        await session.commit()
+
+        await session.refresh(new_request)
+
+        return new_request
+
     async def initialize(self, student_data: StudentInitializingData) -> int:
         result = await self._repository.create(student_data=Student(
             **student_data.__dict__
@@ -41,6 +81,9 @@ class StudentsService(BaseModelService):
         if not (self._telegram_id and self._student_id):
             raise ValueError("Cannot connect tg id, `_telegram_id` and "
                              "`_student_id` must be setted")
+
+        if (await self._repository.get(pk=self._student_id)).telegram_id:
+            raise ValueError("Telegram Id exists")
 
         await self._repository.update(
             pk=self._student_id,

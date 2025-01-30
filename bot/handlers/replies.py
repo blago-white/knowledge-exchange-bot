@@ -26,3 +26,22 @@ LESSON_DATA_MESSAGE = """
 
 <i>Запись — </i>{record_link}
 """
+
+STUDENT_START_MESSAGE = """
+<b>⚜ Здравствуйте, {student_name} ⚜</b>
+
+💰 <i>Ваш баланс на занятия — <b>{balance}</b></i>
+{next_lesson}
+"""
+
+STUDENT_NEXT_LESSON_LABEL_EXISTS = """
+⏰ <i>Ближайший урок — <b>{next_lesson_date}</b></i>
+📕 <i>Предмет — <b>{next_lesson_subject}</b></i>
+⏳ <i>Длительность — <b>{next_lesson_duration}</b></i>
+🌐 <b> Ссылка на занятие: </b> <code>{meet_link}</code>
+"""
+
+STUDENT_NEXT_LESSON_LABEL_EMPTY = """
+⏰ <i>В ближайшее время уроков не запланировано, 
+но <b>не забывайте развиваться)</b></i>
+"""

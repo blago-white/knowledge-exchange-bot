@@ -91,12 +91,23 @@ async def register_student(message: Message,
                 student_id=student_id
             )
             raise ValueError("Subject creation failed!")
-    except Exception:
+    except Exception as e:
+        print(repr(e), e)
         await message.bot.send_message(
             chat_id=message.chat.id,
             text="❌Перепроверьте корректность данных еще разок..."
         )
     else:
+        students_service.student_id = student_id
+
+        try:
+            ref_token = await students_service.generate_ref_token()
+        except:
+            try:
+                ref_token = await students_service.ref_token_exists()
+            except:
+                return await message.reply("<i>Сейчас не можем выдать вам реф ссылку, обратитесь в поддержку(</i>")
+
         await message.bot.send_message(
             chat_id=message.chat.id,
             text="❇<b>Поздравляем, ученик добавлен! Удачных уроков!</b>\n\n"
@@ -104,5 +115,5 @@ async def register_student(message: Message,
                  f"и чтобы вы смогли продать ученика,"
                  f"попросите перейти в этот бот по такой ссылке:"
                  f"\n"
-                 f"<code>t.me/ZnanieExBot?start=student={student_id}</code>"
+                 f"<code>t.me/ZnanieExBot?start=student={ref_token.id}</code>"
         )

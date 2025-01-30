@@ -153,9 +153,6 @@ async def show_subject_profile(
 
     await query.message.edit_text(
         text=f"📍 <b>{subject.student.name} [{subject.student.city}]</b>\n"
-             f"{"" if subject.student.telegram_id else
-             "🔓" + "<code>t.me/ZnanieExBot?start=student=" + str(subject.student.id) + "</code>\n"
-             }\n"
              f"📕 Предмет — <i>{subject.title}\n"
              f"🕑 Ставка — {subject.rate}₽/ч</i>\n"
              f"👤 О ученике — <i>{

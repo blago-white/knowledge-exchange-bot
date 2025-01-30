@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Union
 
 from repositories.students import StudentsModelRepository
 from repositories.workers import WorkersRepository
@@ -23,16 +24,27 @@ class UserService(BaseService):
                                      self.default_students_repository)
 
     async def get_user(self, telegram_id: int) -> tuple[
-        UserType, "Worker" | "Student" | None
+        UserType, Union["Worker", "Student",  None]
     ]:
         try:
-            return UserType.WORKER, await self._workers_repository.get(
-                pk=telegram_id
-            )
+            worker = await self._workers_repository.get(pk=telegram_id)
+
+            if not worker:
+                raise ValueError
+
+            return UserType.WORKER, worker
         except:
             try:
-                return UserType.STUDENT, await self._students_repository.get(
-                    pk=telegram_id
+                student = await self._students_repository.get_by_telegram(
+                    telegram_id=telegram_id
                 )
+
+                if not student:
+                    print(f"STUDENT NOT FOUND: {telegram_id} - {await self._students_repository.get_all()}")
+
+                if not student:
+                    raise ValueError
+
+                return UserType.STUDENT, student
             except:
                 return UserType.UNKNOWN, None
