@@ -117,13 +117,17 @@ class Lesson(Base):
 
     @property
     def display_date(self) -> str:
-        lesson_datetime_format = "%m.%d %H:%M"
-        lesson_date_msc = self.date.astimezone(pytz.timezone("Europe/Moscow"))
+        lesson_datetime_format = "%d.%m %H:%M"
+        lesson_date_msc = self.date_msc
 
         try:
             return lesson_date_msc.strftime(lesson_datetime_format)
         except:
             return
+
+    @property
+    def date_msc(self):
+        return self.date.astimezone(pytz.timezone("Europe/Moscow"))
 
     @validates("duration")
     def _validate_duration(self, key: str, duration: int):

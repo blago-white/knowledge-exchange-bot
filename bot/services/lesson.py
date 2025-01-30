@@ -21,6 +21,10 @@ class LessonsService(BaseModelService):
         super().__init__(*args, **kwargs)
 
     @property
+    def repository(self) -> LessonsModelRepository:
+        return self._repository
+
+    @property
     def lesson_id(self):
         return self._lesson_id
 

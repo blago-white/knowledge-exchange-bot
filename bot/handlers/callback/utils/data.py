@@ -41,3 +41,8 @@ class GetSubjectLessonsData(CallbackData, prefix="subject-lessons"):
 
 class ShowLessonInfoData(CallbackData, prefix="lesson-info"):
     lesson_id: int
+
+
+class ShowWeekSchedule(CallbackData, prefix="week-schedule"):
+    week_number: int = 0
+

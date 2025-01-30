@@ -1,3 +1,4 @@
+import copy
 import datetime
 
 import pytz
@@ -12,9 +13,16 @@ from handlers.callback.utils.data import (TO_HOME_DATA,
                                           WorkerSubjectsFilters,
                                           StudentProfileData,
                                           GetSubjectLessonsData,
-                                          ShowLessonInfoData)
+                                          ShowLessonInfoData,
+                                          ShowWeekSchedule)
 
 from models.lesson import Lesson, Subject, LessonStatus
+
+_LESSON_STATUSES = {
+    LessonStatus.SUCCESS: "✅",
+    LessonStatus.CANCELED: "❌",
+    LessonStatus.SCHEDULED: "🔔"
+}
 
 
 def get_home_inline_kb():
@@ -32,7 +40,7 @@ def get_home_inline_kb():
                 ).pack()
             ), InlineKeyboardButton(
                 text="📆 Расписание",
-                callback_data="None"
+                callback_data=ShowWeekSchedule().pack()
             )]
         ]
     )
@@ -103,6 +111,10 @@ def get_subject_details_kb(subject: Subject):
                 ).pack()
             )],
             [InlineKeyboardButton(
+                text="➕ Новый урок (-и)",
+                callback_data="None"
+            )],
+            [InlineKeyboardButton(
                 text="🏁 Уже закончили учится"
                 if subject.is_active else
                 "🏳 Вернуть активный статус",
@@ -128,16 +140,11 @@ def get_subject_details_kb(subject: Subject):
 def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson]):
     lessons_kb, lessons_kb_row = [], []
 
-    LESSON_STATUSES = {
-        LessonStatus.SUCCESS: "✅",
-        LessonStatus.CANCELED: "❌",
-        LessonStatus.SCHEDULED: "☑"
-    }
-
     for lesson in lessons:
-        lesson_status = LESSON_STATUSES[lesson.status]
+        lesson_status = _LESSON_STATUSES[lesson.status]
 
-        if lesson.status == LessonStatus.SCHEDULED and datetime.datetime.now(tz=pytz.UTC) > lesson.date:
+        if lesson.status == LessonStatus.SCHEDULED and datetime.datetime.now(
+                tz=pytz.UTC) > lesson.date:
             lesson_status = "⁉"
 
         lessons_kb_row.append(InlineKeyboardButton(
@@ -207,3 +214,85 @@ def get_lesson_data_inline_kb(subject_id: int):
             )],
         ]
     )
+
+
+def get_week_schedule_keyboard(lessons: list[Lesson]):
+    lessons_kb, day_lessons_buttons, day_lessons_buttons_pair = [], [], []
+    convert_date_to_day = lambda date: date.split(" ")[0].replace(" ", "")
+
+    current_day = convert_date_to_day(lessons[0].display_date)
+
+    def get_day_label(date: datetime.datetime):
+        return ["Понедельник",
+                "Вторник",
+                "Среда",
+                "Четверг",
+                "Пятница",
+                "Суббота",
+                "Воскресенье"][date.weekday()]
+
+    if lessons:
+        lessons_kb.append([InlineKeyboardButton(
+                text=f"⚜ {get_day_label(date=lessons[0].date_msc)} "
+                     f"{convert_date_to_day(lessons[0].display_date)} ⚜",
+                callback_data="None"
+        )])
+
+    for lesson in lessons:
+        lesson_status = _LESSON_STATUSES[lesson.status]
+
+        if lesson.status == LessonStatus.SCHEDULED and datetime.datetime.now(
+                tz=pytz.UTC) > lesson.date:
+            lesson_status = "⁉"
+
+        lesson_date = convert_date_to_day(lesson.display_date)
+
+        if current_day != lesson_date:
+            lessons_kb.extend(copy.deepcopy(day_lessons_buttons))
+
+            day_lessons_buttons.clear()
+            day_lessons_buttons_pair.clear()
+
+            lessons_kb.append([InlineKeyboardButton(
+                text=f"⚜ {get_day_label(date=lesson.date_msc)} {lesson_date} ⚜",
+                callback_data="None"
+            )])
+
+            if len(day_lessons_buttons_pair) == 0:
+                lessons_kb.append([InlineKeyboardButton(
+                    text=f"{lesson_status} "
+                         f"{lesson.display_date} "
+                         f"{lesson.display_duration}",
+                    callback_data=ShowLessonInfoData(
+                        lesson_id=lesson.id
+                    ).pack()
+                )])
+
+            current_day = lesson_date
+
+        day_lessons_buttons_pair.append(InlineKeyboardButton(
+            text=f"{lesson_status} "
+                 f"{lesson.display_date} "
+                 f"{lesson.display_duration}",
+            callback_data=ShowLessonInfoData(
+                lesson_id=lesson.id
+            ).pack()
+        ))
+
+        if len(day_lessons_buttons_pair) == 2 or current_day != lesson_date:
+            day_lessons_buttons.append(day_lessons_buttons_pair.copy())
+            day_lessons_buttons_pair.clear()
+    # else:
+    #     if len(day_lessons_buttons_pair) == 0:
+    #         lessons_kb.extend(copy.deepcopy(day_lessons_buttons))
+
+    lessons_kb.append([
+        InlineKeyboardButton(
+            text="⬅ К меню",
+            callback_data=TO_HOME_DATA
+        )
+    ])
+
+    print(lessons_kb)
+
+    return InlineKeyboardMarkup(inline_keyboard=lessons_kb)

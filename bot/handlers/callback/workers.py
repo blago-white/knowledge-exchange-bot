@@ -7,16 +7,18 @@ from keyboards.inline import (get_home_inline_kb,
                               get_profile_inline_kb,
                               get_subjects_table_kb,
                               get_subject_details_kb,
-                              get_subject_lessons_kb)
+                              get_subject_lessons_kb,
+                              get_week_schedule_keyboard)
 from models.worker import Worker
-from services.lesson import SubjectsService, Subject
+from services.lesson import SubjectsService, Subject, Lesson, LessonsService
 from services.worker import WorkersService
 from ..callback.utils.data import (RenderProfileData,
                                    UpdateProfileInfoData,
                                    GetWorkerSubjectsData,
                                    TO_HOME_DATA,
                                    StudentProfileData,
-                                   GetSubjectLessonsData)
+                                   GetSubjectLessonsData,
+                                   ShowWeekSchedule)
 from ..common.utils.messages import generate_main_stats_message_text
 from ..providers import provide_model_service
 from ..replies import ACCOUNT_DATA_MESSAGE, START_MESSAGE
@@ -200,4 +202,23 @@ async def show_subject_lessons(
             subject_id=callback_data.subject_id,
             lessons=lessons
         )
+    )
+
+
+@router.callback_query(ShowWeekSchedule.filter(
+    F.week_number != None
+))
+@provide_model_service(LessonsService)
+async def show_week_schedule(
+        query: CallbackQuery,
+        callback_data: GetSubjectLessonsData,
+        state: FSMContext,
+        lessons_service: LessonsService):
+    lessons = await lessons_service.repository.get_week_lessons(
+        worker_id=query.message.chat.id
+    )
+
+    await query.message.edit_text(
+        text="📆 <b>А вот ваши уроки на неделю:</b>",
+        reply_markup=get_week_schedule_keyboard(lessons=lessons)
     )

@@ -13,6 +13,18 @@ class LessonsModelRepository(DefaultModelRepository):
     _model = Lesson
 
     @BaseModelRepository.provide_db_conn()
+    async def get_week_lessons(self, worker_id: int, session: AsyncSession) -> list[Lesson]:
+        start_week, end_week = self._get_week_borders()
+
+        return list((await session.execute(select(self._model).join(
+            Subject, Lesson.subject_id == Subject.id
+        ).where(
+            Subject.worker_id == worker_id,
+            self._model.date < end_week,
+            self._model.date >= start_week
+        ).order_by("date"))).scalars())
+
+    @BaseModelRepository.provide_db_conn()
     async def create(
             self, lesson_data: Lesson,
             session: AsyncSession) -> Lesson:
@@ -40,9 +52,7 @@ class LessonsModelRepository(DefaultModelRepository):
             session: AsyncSession
     ) -> list[Lesson]:
         return (await session.execute(select(
-            func.sum(
-                (self._model.duration/60)*Subject.rate
-            )
+            func.sum((self._model.duration/60)*Subject.rate)
         ).filter(
             self._model.is_completed is True,
             Subject.id.in_([subject.id for subject in subjects])
