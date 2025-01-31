@@ -1,5 +1,6 @@
 from .common import router as COMMON_ROUTER
 from .workers import router as WORKER_ROUTER
+from .lessons import router as LESSONS_ROUTER
 
 __all__ = ["ROUTERS"]
 

@@ -46,3 +46,12 @@ class ShowLessonInfoData(CallbackData, prefix="lesson-info"):
 class ShowWeekSchedule(CallbackData, prefix="week-schedule"):
     week_number: int = 0
 
+
+class AddLessonData(CallbackData, prefix="lesson-add"):
+    subject_id: int = 0
+
+
+class LessonCommitViewCallbackData(CallbackData, prefix="lesson-commit"):
+    make_free: bool = False
+    make_scheduled: bool = False
+    commit_lesson: bool = False
