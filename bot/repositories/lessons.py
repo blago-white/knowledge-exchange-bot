@@ -1,7 +1,7 @@
 import datetime
 import typing
 
-from sqlalchemy import select, func, Integer, not_
+from sqlalchemy import select, func, Integer, not_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.lesson import Lesson, Subject
@@ -101,6 +101,14 @@ class LessonsModelRepository(DefaultModelRepository):
         ).group_by(self._model.id)))
 
         return sum([(pay[0] or pay[1]) for pay in pay_sum])
+
+    @BaseModelRepository.provide_db_conn()
+    async def drop(self, lesson_id: int, session: AsyncSession):
+        await session.execute(
+            delete(self._model).filter_by(id=lesson_id)
+        )
+
+        await session.commit()
 
     @staticmethod
     def _get_week_borders() -> tuple[int, int]:

@@ -40,6 +40,13 @@ class LessonsService(BaseModelService):
 
         return lesson
 
+    async def drop(self, worker_id: int):
+        await self.retrieve(worker_id=worker_id)
+
+        await self._repository.drop(lesson_id=self._lesson_id)
+
+        return True
+
         # worker: Worker = await self.get(
         #     session=session,
         #     pk=self._worker_id,

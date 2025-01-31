@@ -58,7 +58,10 @@ async def render_profile(
 @provide_model_service(WorkersService)
 async def go_home_screen(
         query: CallbackQuery,
-        workers_service: WorkersService):
+        workers_service: WorkersService,
+        state: FSMContext):
+    await state.clear()
+
     worker: Worker = await workers_service.repository.get(
         pk=query.message.chat.id
     )
@@ -189,7 +192,7 @@ async def show_subject_lessons(
         lessons = await subjects_service.get_lessons(
             worker_id=query.message.chat.id
         )
-    except Exception as e:
+    except:
         return await query.answer("Вы не можете просмотреть уроки!")
 
     if not lessons:

@@ -55,3 +55,7 @@ class LessonCommitViewCallbackData(CallbackData, prefix="lesson-commit"):
     make_free: bool = False
     make_scheduled: bool = False
     commit_lesson: bool = False
+
+
+class DropLessonData(CallbackData, prefix="lesson-drop"):
+    pass

@@ -205,7 +205,9 @@ def get_lesson_data_inline_kb(subject_id: int):
     )
 
 
-def get_week_schedule_keyboard(lessons: list[Lesson]):
+def get_week_schedule_keyboard(
+        lessons: list[Lesson],
+        lessons_dropping_mode: bool = False):
     lessons_kb, day_lessons_buttons, day_lessons_buttons_pair = [], [], []
     convert_date_to_day = lambda date: date.split(" ")[0].replace(" ", "")
 
@@ -222,9 +224,9 @@ def get_week_schedule_keyboard(lessons: list[Lesson]):
 
     if lessons:
         lessons_kb.append([InlineKeyboardButton(
-                text=f"⚜ {get_day_label(date=lessons[0].date_msc)} "
-                     f"{convert_date_to_day(lessons[0].display_date)} ⚜",
-                callback_data="None"
+            text=f"⚜ {get_day_label(date=lessons[0].date_msc)} "
+                 f"{convert_date_to_day(lessons[0].display_date)} ⚜",
+            callback_data="None"
         )])
 
     for lesson in lessons:
@@ -239,23 +241,16 @@ def get_week_schedule_keyboard(lessons: list[Lesson]):
         if current_day != lesson_date:
             lessons_kb.extend(copy.deepcopy(day_lessons_buttons))
 
-            day_lessons_buttons.clear()
-            day_lessons_buttons_pair.clear()
+            if len(day_lessons_buttons_pair) == 1:
+                lessons_kb.append([day_lessons_buttons_pair.pop()])
 
             lessons_kb.append([InlineKeyboardButton(
                 text=f"⚜ {get_day_label(date=lesson.date_msc)} {lesson_date} ⚜",
                 callback_data="None"
             )])
 
-            if len(day_lessons_buttons_pair) == 0:
-                lessons_kb.append([InlineKeyboardButton(
-                    text=f"{lesson_status} "
-                         f"{lesson.display_date} "
-                         f"{lesson.display_duration}",
-                    callback_data=data.ShowLessonInfoData(
-                        lesson_id=lesson.id
-                    ).pack()
-                )])
+            day_lessons_buttons.clear()
+            day_lessons_buttons_pair.clear()
 
             current_day = lesson_date
 
@@ -271,18 +266,20 @@ def get_week_schedule_keyboard(lessons: list[Lesson]):
         if len(day_lessons_buttons_pair) == 2 or current_day != lesson_date:
             day_lessons_buttons.append(day_lessons_buttons_pair.copy())
             day_lessons_buttons_pair.clear()
-    # else:
-    #     if len(day_lessons_buttons_pair) == 0:
-    #         lessons_kb.extend(copy.deepcopy(day_lessons_buttons))
+    else:
+        if len(day_lessons_buttons_pair) == 1:
+            lessons_kb.append([day_lessons_buttons_pair.pop()])
 
     lessons_kb.append([
         InlineKeyboardButton(
             text="⬅ К меню",
             callback_data=data.TO_HOME_DATA
+        ),
+        InlineKeyboardButton(
+            text="❎ Как закончите - нажмите" if lessons_dropping_mode else "⛔ Удалить урок (-и)",
+            callback_data=data.DropLessonData().pack()
         )
     ])
-
-    print(lessons_kb)
 
     return InlineKeyboardMarkup(inline_keyboard=lessons_kb)
 
