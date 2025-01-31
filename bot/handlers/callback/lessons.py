@@ -1,4 +1,5 @@
 from aiogram import F
+from aiogram.filters import and_f
 from aiogram.dispatcher.router import Router
 from aiogram.filters.callback_data import CallbackData, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -69,7 +70,10 @@ async def show_lesson(
         ),
         message_id=query.message.message_id,
         chat_id=query.message.chat.id,
-        reply_markup=get_lesson_data_inline_kb(subject_id=lesson.subject_id)
+        reply_markup=get_lesson_data_inline_kb(
+            subject_id=lesson.subject_id,
+            lesson_id=lesson.id
+        )
     )
 
 
@@ -148,13 +152,11 @@ async def lesson_creation_form_action(
             )
 
 
-@router.callback_query(data.DropLessonData.filter())
-@provide_model_service(LessonsService)
-async def drop_lesson(
+@router.callback_query(data.DropLessonData.filter(F.many == True))
+async def drop_lesson_bulk(
         query: CallbackQuery,
         callback_data: data.LessonCommitViewCallbackData,
-        state: FSMContext,
-        lessons_service: LessonsService):
+        state: FSMContext):
     state_ = await state.get_state()
 
     if state_ == lessons_states.DropLessonsForm.drop_lesson:
@@ -179,3 +181,25 @@ async def drop_lesson(
         )
 
         await state.set_state(lessons_states.DropLessonsForm.drop_lesson)
+
+
+@router.callback_query(
+    and_f(
+        data.DropLessonData.filter(F.many == False),
+        data.DropLessonData.filter(F.lesson_id != None)
+    )
+)
+@provide_model_service(LessonsService)
+async def drop_lesson_bulk(
+        query: CallbackQuery,
+        callback_data: data.DropLessonData,
+        state: FSMContext,
+        lessons_service: LessonsService):
+    lessons_service.lesson_id = callback_data.lesson_id
+
+    try:
+        await lessons_service.drop(worker_id=query.message.chat.id)
+    except:
+        return await query.answer("⚠ Невозможно удалить ⚠")
+    else:
+        await query.answer("✅ Удалили! ✅")

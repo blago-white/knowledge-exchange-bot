@@ -179,12 +179,18 @@ def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson]):
     )
 
 
-def get_lesson_data_inline_kb(subject_id: int):
+def get_lesson_data_inline_kb(lesson_id: int, subject_id: int):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
                 text="👥 Учитель",
                 callback_data="None"
+            )],
+            [InlineKeyboardButton(
+                text="⛔ Удалить урок",
+                callback_data=data.DropLessonData(
+                    lesson_id=lesson_id
+                ).pack()
             )],
             [InlineKeyboardButton(
                 text="👤⬅ К ученику",
@@ -277,7 +283,7 @@ def get_week_schedule_keyboard(
         ),
         InlineKeyboardButton(
             text="❎ Как закончите - нажмите" if lessons_dropping_mode else "⛔ Удалить урок (-и)",
-            callback_data=data.DropLessonData().pack()
+            callback_data=data.DropLessonData(many=True).pack()
         )
     ])
 

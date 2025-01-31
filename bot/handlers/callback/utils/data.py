@@ -58,4 +58,5 @@ class LessonCommitViewCallbackData(CallbackData, prefix="lesson-commit"):
 
 
 class DropLessonData(CallbackData, prefix="lesson-drop"):
-    pass
+    many: bool = False
+    lesson_id: int = None
