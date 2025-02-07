@@ -8,3 +8,8 @@ class LessonCreationForm(StatesGroup):
 
 class DropLessonsForm(StatesGroup):
     drop_lesson = State()
+
+
+class EditLessonDataForm(StatesGroup):
+    edit_record_link = State()
+    edit_datetime = State()

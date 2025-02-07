@@ -78,5 +78,4 @@ class DefaultModelRepository(BaseModelRepository):
 
         await session.commit()
 
-        return await self.get(session=session, pk=pk)
-
+        return await self.get(pk=pk)

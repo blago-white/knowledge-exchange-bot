@@ -1,4 +1,4 @@
-from models.lesson import Lesson, Subject
+from models.lesson import Lesson, Subject, LessonStatus
 from repositories.lessons import LessonsModelRepository
 from repositories.subjects import SubjectsModelRepository
 
@@ -40,23 +40,26 @@ class LessonsService(BaseModelService):
 
         return lesson
 
+    async def update(self, worker_id: int, **params):
+        lesson: Lesson = await self._repository.get(
+            pk=self._lesson_id,
+        )
+
+        if not lesson.subject.worker_id == worker_id:
+            raise ValueError("Cannot update this lesson!")
+
+        return await self._repository.update(pk=self._lesson_id,
+                                             **params)
+
     async def drop(self, worker_id: int):
         await self.retrieve(worker_id=worker_id)
 
-        await self._repository.drop(lesson_id=self._lesson_id)
+        await self._repository.update(
+            pk=self._lesson_id,
+            status=LessonStatus.CANCELED
+        )
 
         return True
-
-        # worker: Worker = await self.get(
-        #     session=session,
-        #     pk=self._worker_id,
-        # )
-        #
-        # profit_for_week = await self._lessons_repository.get_week_lessons_pay(
-        #     *(s.id for s in worker.subjects)
-        # )
-        #
-        # return profit_for_week
 
 
 class SubjectsService(BaseModelService):
