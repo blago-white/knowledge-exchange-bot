@@ -105,7 +105,10 @@ class StudentSellOffer(Base):
     )
 
     def __repr__(self):
-        return f"{self.__class__.__name__}()"
+        return (f"{self.__class__.__name__}({self.cost=}rub., "
+                f"{self.recipient_id=},"
+                f"{self.seller_id=},"
+                f"{self.created_at=})")
 
     @validates("rate")
     def _validate_rate(self, key: str, rate: float):

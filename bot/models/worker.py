@@ -27,8 +27,9 @@ class Worker(BaseBalanceModel):
     )
     firstname: Mapped[str] = mapped_column(
         sa.String(MAX_WORKER_FIRST_NAME_LENGTH))
-    lastname: Mapped[str] = mapped_column(
-        sa.String(MAX_WORKER_LAST_NAME_LENGTH)
+    lastname: Mapped[str | None] = mapped_column(
+        sa.String(MAX_WORKER_LAST_NAME_LENGTH),
+        nullable=True
     )
     description: Mapped[str] = mapped_column(
         sa.String(MAX_DESCRIPTION_LENGTH),

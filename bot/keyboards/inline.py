@@ -6,6 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 
 from handlers.callback.utils import data
 from models.lesson import Lesson, Subject, LessonStatus
+from models.student import StudentSellOffer
 
 _LESSON_STATUSES = {
     LessonStatus.SUCCESS: "✅",
@@ -30,6 +31,20 @@ def get_home_inline_kb():
             ), InlineKeyboardButton(
                 text="📆 Расписание",
                 callback_data=data.ShowWeekSchedule().pack()
+            )],
+            [InlineKeyboardButton(
+                text="💸 Вывести",
+                callback_data="None"
+            ), InlineKeyboardButton(
+                text="🗃 Проданные Ученики",
+                callback_data=data.SelledStudentsList().pack()
+            ), InlineKeyboardButton(
+                text="💬 Ваши Чаты",
+                callback_data=data.MyChatsListData().pack()
+            )],
+            [InlineKeyboardButton(
+                text="🛡 О \"ИП Логинов Богдан Николаевич\"",
+                callback_data="None"
             )]
         ]
     )
@@ -79,7 +94,8 @@ def get_subjects_table_kb(subjects: list[Subject]):
             *[[InlineKeyboardButton(
                 text=till_text,
                 callback_data=data.StudentProfileData(
-                    subject_id=subject.id
+                    subject_id=subject.id,
+                    seller_view=False
                 ).pack()
             )] for subject, till_text in zip(subjects, subjects_table)],
             [InlineKeyboardButton(
@@ -90,29 +106,37 @@ def get_subjects_table_kb(subjects: list[Subject]):
     )
 
 
-def get_subject_details_kb(subject: Subject):
+def get_subject_details_kb(subject: Subject,
+                           seller_view: bool = True):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
                 text="📆 Тут уроки",
                 callback_data=data.GetSubjectLessonsData(
-                    subject_id=subject.id
+                    subject_id=subject.id,
+                    seller_view=seller_view
                 ).pack()
             )],
             [InlineKeyboardButton(
                 text="➕ Новый урок (-и)",
                 callback_data=data.AddLessonData(subject_id=subject.id).pack()
-            )],
+            )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="🏁 Уже закончили учится"
                 if subject.is_active else
                 "🏳 Вернуть активный статус",
                 callback_data="None"
-            )],
+            )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="✏ Кое-что нужно поправить",
                 callback_data="None"
-            )],
+            )] if not seller_view else [],
+            [InlineKeyboardButton(
+                text="💰 Продать ученика",
+                callback_data=data.SellStudentData(
+                    subject_id=subject.id
+                ).pack()
+            )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
                 callback_data=data.GetWorkerSubjectsData(
@@ -126,7 +150,7 @@ def get_subject_details_kb(subject: Subject):
     )
 
 
-def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson]):
+def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson], seller_view: bool):
     lessons_kb, lessons_kb_row = [], []
 
     for lesson in lessons:
@@ -157,13 +181,15 @@ def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson]):
             [InlineKeyboardButton(
                 text="👤⬅ К ученику",
                 callback_data=data.StudentProfileData(
-                    subject_id=subject_id
+                    subject_id=subject_id,
+                    seller_view=False
                 ).pack()
             ), InlineKeyboardButton(
                 text="❓Что это обозначает?",
                 callback_data=data.GetSubjectLessonsData(
                     subject_id=subject_id,
-                    only_show_legend=True
+                    only_show_legend=True,
+                    seller_view=seller_view
                 ).pack()
             )],
             [InlineKeyboardButton(
@@ -195,7 +221,8 @@ def get_lesson_data_inline_kb(lesson_id: int, subject_id: int):
             [InlineKeyboardButton(
                 text="👤⬅ К ученику",
                 callback_data=data.StudentProfileData(
-                    subject_id=subject_id
+                    subject_id=subject_id,
+                    seller_view=False
                 ).pack()
             )],
             [InlineKeyboardButton(
@@ -314,4 +341,67 @@ def get_lesson_commiting_kb(is_free: bool = False, is_scheduled: bool = False):
                 ).pack()
             )],
         ]
+    )
+
+
+def get_selled_list_inline_kb(selled: list[StudentSellOffer]):
+    selled_kb = []
+
+    for s in selled:
+        selled_kb.append([InlineKeyboardButton(
+            text=f"{"✅" if s.is_paid else (
+                "✴" if s.is_accepted else "📤"
+            )} | "
+            f"{s.subject.student.name} | "
+            f"{s.subject.title} | "
+            f"{s.paid_sum}₽/{s.cost}₽",
+            callback_data=data.StudentProfileData(
+                subject_id=s.subject.id,
+                seller_view=True
+            ).pack()
+        )])
+
+    selled_kb.append([InlineKeyboardButton(
+        text="⬅ К меню",
+        callback_data=data.TO_HOME_DATA
+    )])
+
+    return InlineKeyboardMarkup(inline_keyboard=selled_kb)
+
+
+def get_sell_approve_kb():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="✅ Все так!",
+                callback_data=data.SellApprovationData(
+                    approve=True
+                ).pack()
+            ), InlineKeyboardButton(
+                text="❌ Отмена",
+                callback_data=data.SellApprovationData(
+                    approve=False
+                ).pack()
+            )]
+        ]
+    )
+
+
+def get_accept_sell_offer_kb(offer_id: int):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[
+            InlineKeyboardButton(
+                text="✅ Принять",
+                callback_data=data.SellOfferAcceptingData(
+                    accept=True,
+                    offer_id=offer_id
+                ).pack()
+            ), InlineKeyboardButton(
+                text="❌ Отмена",
+                callback_data=data.SellOfferAcceptingData(
+                    accept=False,
+                    offer_id=offer_id
+                ).pack()
+            )
+        ]]
     )

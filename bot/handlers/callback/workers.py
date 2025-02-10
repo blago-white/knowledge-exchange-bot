@@ -138,26 +138,41 @@ async def update_profile_info(
 @router.callback_query(StudentProfileData.filter(
     F.subject_id != None
 ))
-@provide_model_service(SubjectsService)
+@provide_model_service(SubjectsService, WorkersService)
 async def show_subject_profile(
         query: CallbackQuery,
         callback_data: StudentProfileData,
         state: FSMContext,
-        subjects_service: SubjectsService):
+        subjects_service: SubjectsService,
+        workers_service: WorkersService):
     subjects_service.subject_id = callback_data.subject_id
 
     try:
+        if callback_data.seller_view:
+            worker_id = (await workers_service.get_selled_student_status(
+                subject_id=callback_data.subject_id,
+            )).subject.worker_id
+            print(worker_id)
+        else:
+            worker_id = query.message.chat.id
+
         subject: Subject = await subjects_service.retrieve(
-            worker_id=query.message.chat.id
+            worker_id=worker_id
         )
     except Exception as e:
+        print(e)
+
         return await query.answer(
-            "Вы не можете просмотреть профиль этого ученика!")
+            "Вы не можете просмотреть профиль этого ученика!"
+        )
     else:
         await query.answer()
 
+    selled_prefix = "<b>[✅ Ваш проданный ученик]</b>" if callback_data.seller_view else ""
+
     await query.message.edit_text(
-        text=f"📍 <b>{subject.student.name} [{subject.student.city}]</b>\n"
+        text=f"📍 {selled_prefix} "
+             f"<b>{subject.student.name} [{subject.student.city}]</b>\n"
              f"📕 Предмет — <i>{subject.title}\n"
              f"🕑 Ставка — {subject.rate}₽/ч</i>\n"
              f"👤 О ученике — <i>{
@@ -166,19 +181,23 @@ async def show_subject_profile(
              f"<i>{
              "— " + (subject.description or "Кажется, заметок еще нет!")
              }</i>",
-        reply_markup=get_subject_details_kb(subject=subject)
+        reply_markup=get_subject_details_kb(
+            subject=subject,
+            seller_view=callback_data.seller_view,
+        )
     )
 
 
 @router.callback_query(GetSubjectLessonsData.filter(
     F.subject_id != None
 ))
-@provide_model_service(SubjectsService)
+@provide_model_service(SubjectsService, WorkersService)
 async def show_subject_lessons(
         query: CallbackQuery,
         callback_data: GetSubjectLessonsData,
         state: FSMContext,
-        subjects_service: SubjectsService):
+        subjects_service: SubjectsService,
+        workers_service: WorkersService):
     if callback_data.only_show_legend:
         return await query.answer(
             "!ВРЕМЯ-МСК!\n"
@@ -188,9 +207,16 @@ async def show_subject_lessons(
 
     subjects_service.subject_id = callback_data.subject_id
 
+    if callback_data.seller_view:
+        worker_id = (await workers_service.get_selled_student_status(
+            subject_id=callback_data.subject_id,
+        )).subject.worker_id
+    else:
+        worker_id = query.message.chat.id
+
     try:
         lessons = await subjects_service.get_lessons(
-            worker_id=query.message.chat.id
+            worker_id=worker_id
         )
     except:
         return await query.answer("Вы не можете просмотреть уроки!")
@@ -203,7 +229,8 @@ async def show_subject_lessons(
     await query.message.edit_reply_markup(
         reply_markup=get_subject_lessons_kb(
             subject_id=callback_data.subject_id,
-            lessons=lessons
+            lessons=lessons,
+            seller_view=callback_data.seller_view
         )
     )
 

@@ -32,10 +32,12 @@ class GetWorkerSubjectsData(CallbackData, prefix="subjects-all"):
 
 class StudentProfileData(CallbackData, prefix="student"):
     subject_id: int
+    seller_view: int = None
 
 
 class GetSubjectLessonsData(CallbackData, prefix="subject-lessons"):
     subject_id: int
+    seller_view: bool
     only_show_legend: bool = False
 
 
@@ -60,3 +62,28 @@ class LessonCommitViewCallbackData(CallbackData, prefix="lesson-commit"):
 class DropLessonData(CallbackData, prefix="lesson-drop"):
     many: bool = False
     lesson_id: int = None
+
+
+class MakeWithdrawData(CallbackData, prefix="make-withdraw"):
+    pass
+
+
+class SelledStudentsList(CallbackData, prefix="selled-list"):
+    pass
+
+
+class SellStudentData(CallbackData, prefix="sell-student"):
+    subject_id: int
+
+
+class SellApprovationData(CallbackData, prefix="sell-approve"):
+    approve: bool
+
+
+class SellOfferAcceptingData(CallbackData, prefix="sell-accept"):
+    accept: bool
+    offer_id: int
+
+
+class MyChatsListData(CallbackData, prefix="chats"):
+    pass

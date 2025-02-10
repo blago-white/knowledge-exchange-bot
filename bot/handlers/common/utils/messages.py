@@ -1,6 +1,6 @@
 from models.worker import Worker
 from models.lesson import Lesson, LessonStatus
-from models.student import Student
+from models.student import Student, StudentSellOffer
 from services.worker import WorkersService
 
 
