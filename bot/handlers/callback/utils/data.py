@@ -32,7 +32,7 @@ class GetWorkerSubjectsData(CallbackData, prefix="subjects-all"):
 
 class StudentProfileData(CallbackData, prefix="student"):
     subject_id: int
-    seller_view: int = None
+    seller_view: int = False
 
 
 class GetSubjectLessonsData(CallbackData, prefix="subject-lessons"):
@@ -43,10 +43,14 @@ class GetSubjectLessonsData(CallbackData, prefix="subject-lessons"):
 
 class ShowLessonInfoData(CallbackData, prefix="lesson-info"):
     lesson_id: int
+    seller_id: int = -1
+    seller_view: bool = False
 
 
 class ShowWeekSchedule(CallbackData, prefix="week-schedule"):
     week_number: int = 0
+    beta: bool = False
+    alpha: int = 49385394875
 
 
 class AddLessonData(CallbackData, prefix="lesson-add"):
@@ -61,7 +65,7 @@ class LessonCommitViewCallbackData(CallbackData, prefix="lesson-commit"):
 
 class DropLessonData(CallbackData, prefix="lesson-drop"):
     many: bool = False
-    lesson_id: int = None
+    lesson_id: int = -1
 
 
 class MakeWithdrawData(CallbackData, prefix="make-withdraw"):
@@ -87,3 +91,7 @@ class SellOfferAcceptingData(CallbackData, prefix="sell-accept"):
 
 class MyChatsListData(CallbackData, prefix="chats"):
     pass
+
+
+class LessonCompliteData(CallbackData, prefix="complete-lesson"):
+    lesson_id: int

@@ -1,5 +1,7 @@
 import datetime
 
+import pytz
+
 from models.lesson import Subject, Lesson
 from models.worker import Worker
 from models.student import StudentSellOffer
@@ -100,22 +102,34 @@ class WorkersService(BaseModelService):
     ) -> list["Lesson"]:
         await self._check_selled_subject(subject_id=subject_id)
 
-        sell_offer = (
-            await self.sell_offers_repository.get_by_subject_id(subject_id=subject_id)
+        sell_offer = await self.sell_offers_repository.get_by_subject_id(
+            subject_id=subject_id
         )
 
-        return await self.lessons_repository.get_lessons_for_period(
+        if sell_offer and sell_offer.is_paid:
+            raise ValueError("Offer paid total")
+
+        print("GET")
+
+        return sell_offer.recipient_id, await self.lessons_repository.get_lessons_for_period(
             subject_id=subject_id,
             start=sell_offer.created_at,
-            end=sell_offer.paid_total_at
+            end=sell_offer.paid_total_at or datetime.datetime.now(
+                tz=pytz.UTC
+            ) + datetime.timedelta(
+                weeks=8
+            )
         )
 
     async def get_selled_student_status(
-            self, subject_id: int
+            self, subject_id: int, seller_id: int
     ) -> "StudentSellOffer":
         await self._check_selled_subject(subject_id=subject_id)
 
-        return await self.sell_offers_repository.get_by_subject_id(subject_id=subject_id)
+        return await self.sell_offers_repository.get_by_subject_id(
+            subject_id=subject_id,
+            seller_id=seller_id
+        )
 
     async def get_active_subjects(self) -> list["Subject"]:
         return self.workers_repository.get(
@@ -198,12 +212,6 @@ class WorkersService(BaseModelService):
                 seller_id=self._worker_id, subject_id=subject_id
         ):
             raise Exception("Subject is not selled!")
-
-        if not self.sell_offers_repository.is_unpayed(
-            seller_id=self._worker_id,
-            subject_id=subject_id
-        ):
-            raise Exception("Subject paid total")
 
     async def _can_sell_subject(self, subject_id: int):
         if not await self._subjects_repository.worker_has_subject(

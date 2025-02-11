@@ -12,6 +12,8 @@ from keyboards.inline import (get_lesson_data_inline_kb,
                               get_subject_lessons_kb)
 from models.lesson import Lesson
 from services.lesson import LessonsService
+from services.exceptions.lessons import (CompliteLessonDateUncorrect,
+                                         StudentBalanceEmpty)
 
 from ..callback.utils import data
 from ..common.utils.messages import generate_lesson_data_message_text
@@ -25,8 +27,10 @@ router = Router(name=__name__)
 def update_drop_lessons_kb(keyboard: list[list[InlineKeyboardButton]]):
     for row_n, row in enumerate(keyboard):
         for i_n, i in enumerate(row):
-            if i.callback_data == data.DropLessonData().pack():
-                keyboard[row_n][i_n].text = "⛔ Удалить урок (-и)" if i.text == "❎ Готово" else "❎ Готово"
+            if "lesson-drop" in i.callback_data:
+                keyboard[row_n][i_n].text = "⛔ Удалить урок (-и)" \
+                    if i.text == "❎ Готово" \
+                    else "❎ Готово"
                 break
 
     return keyboard
@@ -49,16 +53,22 @@ async def show_lesson(
         try:
             await lessons_service.drop(worker_id=query.message.chat.id)
         except Exception as e:
-            print(repr(e), e)
             return await query.answer("⚠ Невозможно удалить ⚠")
         else:
             return await query.answer(text="✅ Удалили! ✅")
 
     try:
+        worker_id = (callback_data.seller_id
+            if callback_data.seller_view
+            else query.message.chat.id)
+
+        print("ABCD", worker_id, callback_data.seller_id, query.message.chat.id)
+
         lesson: Lesson = await lessons_service.retrieve(
-            worker_id=query.message.chat.id
+            worker_id=worker_id
         )
-    except:
+    except Exception as e:
+        print(e)
         return await query.answer("Нельзя просмотреть этот урок!")
     else:
         await query.answer()
@@ -72,7 +82,8 @@ async def show_lesson(
         chat_id=query.message.chat.id,
         reply_markup=get_lesson_data_inline_kb(
             subject_id=lesson.subject_id,
-            lesson_id=lesson.id
+            lesson_id=lesson.id,
+            seller_view=callback_data.seller_view
         )
     )
 
@@ -104,8 +115,6 @@ async def lesson_creation_form_action(
     action = [i for i in dir(callback_data) if i[0] != "_" and (getattr(callback_data, i) is True)].pop()
 
     data_: dict = await state.get_data()
-
-    print(f"ACTION: {action}")
 
     match action:
         case "commit_lesson":
@@ -155,7 +164,7 @@ async def lesson_creation_form_action(
 @router.callback_query(data.DropLessonData.filter(F.many == True))
 async def drop_lesson_bulk(
         query: CallbackQuery,
-        callback_data: data.LessonCommitViewCallbackData,
+        callback_data: data.DropLessonData,
         state: FSMContext):
     state_ = await state.get_state()
 
@@ -176,9 +185,12 @@ async def drop_lesson_bulk(
             keyboard=query.message.reply_markup.inline_keyboard
         )
 
-        await query.message.edit_reply_markup(
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=updated_kb)
-        )
+        try:
+            await query.message.edit_reply_markup(
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=updated_kb)
+            )
+        except:
+            pass
 
         await state.set_state(lessons_states.DropLessonsForm.drop_lesson)
 
@@ -190,7 +202,7 @@ async def drop_lesson_bulk(
     )
 )
 @provide_model_service(LessonsService)
-async def drop_lesson_bulk(
+async def drop_lesson_datailed(
         query: CallbackQuery,
         callback_data: data.DropLessonData,
         state: FSMContext,
@@ -203,3 +215,95 @@ async def drop_lesson_bulk(
         return await query.answer("⚠ Невозможно удалить ⚠")
     else:
         await query.answer("✅ Удалили! ✅")
+
+
+@router.callback_query(data.LessonCompliteData.filter())
+@provide_model_service(LessonsService)
+async def complete_lesson(
+        query: CallbackQuery,
+        callback_data: data.LessonCompliteData,
+        state: FSMContext,
+        lessons_service: LessonsService):
+    lessons_service.lesson_id = callback_data.lesson_id
+
+    bot, chat_id = query.bot, query.message.chat.id
+
+    try:
+        result = await lessons_service.complete_lesson(
+            worker_id=chat_id
+        )
+    except CompliteLessonDateUncorrect:
+        return await query.answer("⚠ Время урока еще не подошло ⚠")
+    except PermissionError:
+        return await query.answer("⚠ Кажется у вас нет прав ⚠")
+    except StudentBalanceEmpty:
+        await query.answer()
+
+        await query.bot.send_message(
+            chat_id=chat_id,
+            text="⚠ <b>У ученика не осталось баланса</b>\n\n"
+                 "Урок провести не получится, "
+                 "либо сделайте урок бесплатным, либо свяжитесь с учеником!"
+        )
+
+        return
+    except Exception as e:
+        print(e)
+        return await query.answer("Что-то пошло не так, напишите в поддержку")
+    else:
+        await query.answer()
+
+    try:
+        await bot.send_message(
+            chat_id=result.subject.student_id,
+            text="🔆 <b>Вы посетили еще один урок</b>\n"
+                 "Двигайтесь в том же "
+                 "темпе и вы достигните всех целей!\n"
+                 "<i>При любых вопросах пишите в поддержку - /support</i>"
+        )
+    except:
+        pass
+
+    if result.for_paid and result.offer:
+        await bot.send_message(
+            chat_id=result.seller_id,
+            text="💸 <b>Новое поступление по проданному ученику</b>\n"
+                 f"Предмет — {result.subject.title}\n"
+                 f"Ученик — {result.subject.student.name} | "
+                 f"{result.subject.student.city}\n"
+                 f"<b>{result.offer.paid_sum}₽ / {result.offer.cost}₽</b>\n"
+        )
+
+        if result.paid_total_now:
+            await bot.send_message(
+                chat_id=chat_id,
+                text="✨ <b>Вы полностью выплатили ученика теперь можно "
+                     "его продавать и получить контакты!</b>"
+            )
+
+            await bot.send_message(
+                chat_id=result.seller_id,
+                text="🔥 <b>Ученик полностью оплачен!</b>"
+            )
+        else:
+            await bot.send_message(
+                chat_id=chat_id,
+                text="⭐ <b>Вы оплатили еще часть!</b>"
+            )
+    else:
+        await bot.send_message(
+            chat_id=chat_id,
+            text="🔆 <b>Поздравляем с еще одним проведенным уроком!</b>"
+        )
+
+    if result.low_balance_student:
+        await bot.send_message(
+            chat_id=result.subject.student_id,
+            text="📛 <b>Видим, что у вас заканчивается баланс</b>\n"
+                 "До следующего урока постарайтесь внести оплату, <b>спасибо</b>🤍!"
+        )
+
+        await bot.send_message(
+            chat_id=chat_id,
+            text="📛 <b>У ученика не осталось баланса на следующие уроки!</b>"
+        )

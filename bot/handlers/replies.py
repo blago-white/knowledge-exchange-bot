@@ -1,6 +1,7 @@
 START_MESSAGE = """
 <b>⚜ Меню</b> [<code>{user_id}</code>] ⚜
 
+💵 <i>Ваш текущий баланс — <b>{balance}₽</b></i>
 ✅ <i>Проданных учеников — <b>{selled_students}</b></i>
 📈 <i>Заработок в неделю — <b>{week_profit}₽</b></i>
 💰 <i>Всего забаротано — <b>{total_profit}₽</b></i>

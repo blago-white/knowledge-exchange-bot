@@ -151,17 +151,15 @@ async def show_subject_profile(
         if callback_data.seller_view:
             worker_id = (await workers_service.get_selled_student_status(
                 subject_id=callback_data.subject_id,
+                seller_id=query.message.chat.id
             )).subject.worker_id
-            print(worker_id)
         else:
             worker_id = query.message.chat.id
 
         subject: Subject = await subjects_service.retrieve(
             worker_id=worker_id
         )
-    except Exception as e:
-        print(e)
-
+    except:
         return await query.answer(
             "Вы не можете просмотреть профиль этого ученика!"
         )
@@ -184,6 +182,7 @@ async def show_subject_profile(
         reply_markup=get_subject_details_kb(
             subject=subject,
             seller_view=callback_data.seller_view,
+            seller_id=worker_id
         )
     )
 
@@ -207,18 +206,17 @@ async def show_subject_lessons(
 
     subjects_service.subject_id = callback_data.subject_id
 
-    if callback_data.seller_view:
-        worker_id = (await workers_service.get_selled_student_status(
-            subject_id=callback_data.subject_id,
-        )).subject.worker_id
-    else:
-        worker_id = query.message.chat.id
-
     try:
-        lessons = await subjects_service.get_lessons(
-            worker_id=worker_id
-        )
-    except:
+        if callback_data.seller_view:
+            recipient_id, lessons = await workers_service.get_selled_student_lessons(
+                subject_id=callback_data.subject_id
+            )
+        else:
+            recipient_id = None
+            lessons = await subjects_service.get_lessons(
+                worker_id=query.message.chat.id
+            )
+    except Exception:
         return await query.answer("Вы не можете просмотреть уроки!")
 
     if not lessons:
@@ -230,7 +228,8 @@ async def show_subject_lessons(
         reply_markup=get_subject_lessons_kb(
             subject_id=callback_data.subject_id,
             lessons=lessons,
-            seller_view=callback_data.seller_view
+            seller_view=callback_data.seller_view,
+            seller_id=recipient_id if callback_data.seller_view else query.message.chat.id
         )
     )
 
@@ -241,7 +240,7 @@ async def show_subject_lessons(
 @provide_model_service(LessonsService)
 async def show_week_schedule(
         query: CallbackQuery,
-        callback_data: GetSubjectLessonsData,
+        callback_data: ShowWeekSchedule,
         state: FSMContext,
         lessons_service: LessonsService):
     lessons = await lessons_service.repository.get_week_lessons(
@@ -249,6 +248,6 @@ async def show_week_schedule(
     )
 
     await query.message.edit_text(
-        text="📆 <b>А вот ваши уроки на неделю:</b>",
+        text=f"📆 <b>{"А вот ваши уроки на неделю:" if lessons else "На этой неделе уроков не планируется!"}</b>",
         reply_markup=get_week_schedule_keyboard(lessons=lessons)
     )

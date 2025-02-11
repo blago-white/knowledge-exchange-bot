@@ -107,14 +107,16 @@ def get_subjects_table_kb(subjects: list[Subject]):
 
 
 def get_subject_details_kb(subject: Subject,
-                           seller_view: bool = True):
+                           seller_view: bool = True,
+                           seller_id: int = None):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
                 text="📆 Тут уроки",
                 callback_data=data.GetSubjectLessonsData(
                     subject_id=subject.id,
-                    seller_view=seller_view
+                    seller_view=seller_view,
+                    seller_id=seller_id
                 ).pack()
             )],
             [InlineKeyboardButton(
@@ -150,7 +152,10 @@ def get_subject_details_kb(subject: Subject,
     )
 
 
-def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson], seller_view: bool):
+def get_subject_lessons_kb(subject_id: int,
+                           lessons: list[Lesson],
+                           seller_id: int = -1,
+                           seller_view: bool = False):
     lessons_kb, lessons_kb_row = [], []
 
     for lesson in lessons:
@@ -165,7 +170,9 @@ def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson], seller_view: 
                  f"{lesson.display_date} "
                  f"{lesson.display_duration}",
             callback_data=data.ShowLessonInfoData(
-                lesson_id=lesson.id
+                lesson_id=lesson.id,
+                seller_view=seller_view,
+                seller_id=seller_id,
             ).pack()
         ))
 
@@ -205,7 +212,7 @@ def get_subject_lessons_kb(subject_id: int, lessons: list[Lesson], seller_view: 
     )
 
 
-def get_lesson_data_inline_kb(lesson_id: int, subject_id: int):
+def get_lesson_data_inline_kb(lesson_id: int, subject_id: int, seller_view: bool = False):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
@@ -215,16 +222,22 @@ def get_lesson_data_inline_kb(lesson_id: int, subject_id: int):
             [InlineKeyboardButton(
                 text="⛔ Удалить урок",
                 callback_data=data.DropLessonData(
+                    lesson_id=lesson_id,
+                    many=False
+                ).pack()
+            ), InlineKeyboardButton(
+                text="✅ Провели урок",
+                callback_data=data.LessonCompliteData(
                     lesson_id=lesson_id
                 ).pack()
-            )],
+            )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="👤⬅ К ученику",
                 callback_data=data.StudentProfileData(
                     subject_id=subject_id,
                     seller_view=False
                 ).pack()
-            )],
+            )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
                 callback_data=data.GetWorkerSubjectsData(
@@ -243,8 +256,22 @@ def get_week_schedule_keyboard(
         lessons_dropping_mode: bool = False):
     lessons_kb, day_lessons_buttons, day_lessons_buttons_pair = [], [], []
     convert_date_to_day = lambda date: date.split(" ")[0].replace(" ", "")
+    controls = [
+        InlineKeyboardButton(
+            text="⬅ К меню",
+            callback_data=data.TO_HOME_DATA
+        ),
+        InlineKeyboardButton(
+            text="❎ Как закончите - нажмите" if lessons_dropping_mode else "⛔ Удалить урок (-и)",
+            callback_data=data.DropLessonData(lesson_id=1,
+                                              many=True).pack()
+        )
+    ]
 
-    current_day = convert_date_to_day(lessons[0].display_date)
+    try:
+        current_day = convert_date_to_day(lessons[0].display_date)
+    except:
+        return InlineKeyboardMarkup(inline_keyboard=[controls])
 
     def get_day_label(date: datetime.datetime):
         return ["Понедельник",
@@ -292,7 +319,8 @@ def get_week_schedule_keyboard(
                  f"{lesson.display_date} "
                  f"{lesson.display_duration}",
             callback_data=data.ShowLessonInfoData(
-                lesson_id=lesson.id
+                lesson_id=lesson.id,
+                seller_view=False
             ).pack()
         ))
 
@@ -303,16 +331,7 @@ def get_week_schedule_keyboard(
         if len(day_lessons_buttons_pair) == 1:
             lessons_kb.append([day_lessons_buttons_pair.pop()])
 
-    lessons_kb.append([
-        InlineKeyboardButton(
-            text="⬅ К меню",
-            callback_data=data.TO_HOME_DATA
-        ),
-        InlineKeyboardButton(
-            text="❎ Как закончите - нажмите" if lessons_dropping_mode else "⛔ Удалить урок (-и)",
-            callback_data=data.DropLessonData(many=True).pack()
-        )
-    ])
+    lessons_kb.append(controls)
 
     return InlineKeyboardMarkup(inline_keyboard=lessons_kb)
 

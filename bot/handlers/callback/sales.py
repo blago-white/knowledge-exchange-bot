@@ -52,6 +52,8 @@ async def sell_student(
         query: CallbackQuery,
         callback_data: data.SellStudentData,
         state: FSMContext):
+    await query.answer()
+
     await state.set_state(sales_states.SellStudentForm.enter_recipient_id)
 
     await state.set_data(data=dict(subject_id=callback_data.subject_id))
@@ -155,3 +157,11 @@ async def set_accept_value_sell_offer(
                  f"Ученик по предмету {offer.subject.title} и стоимостью {offer.cost}\n"
                  f"Был куплен статус оплат смотрите в главном меню > проданные ученики!"
         )
+
+
+@router.callback_query()
+async def view_msg(
+        query: CallbackQuery,
+        state: FSMContext):
+    print(query.data)
+    await query.answer()

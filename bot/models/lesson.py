@@ -96,6 +96,8 @@ class Lesson(Base):
     is_completed: Mapped[bool] = mapped_column(default=False)
     status: Mapped[LessonStatus] = mapped_column(default=LessonStatus.SCHEDULED)
 
+    for_offer_payment: Mapped[bool] = mapped_column(default=False)
+
     subject: Mapped[Subject] = relationship(
         back_populates="lessons",
         lazy="joined"

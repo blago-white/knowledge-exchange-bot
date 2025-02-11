@@ -68,7 +68,9 @@ class LessonsModelRepository(DefaultModelRepository):
     @BaseModelRepository.provide_db_conn()
     async def get_lessons_for_period(self, subject_id: int,
                                      start: datetime.datetime,
-                                     end: datetime.datetime):
+                                     end: datetime.datetime,
+                                     session: AsyncSession):
+        print(f"{subject_id=} {start=} {end=}")
         return (await session.execute(select(self._model).filter_by(
             subject_id=subject_id,
         ).where(

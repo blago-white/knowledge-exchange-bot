@@ -39,9 +39,15 @@ class StudentsSellOffersModelRepository(DefaultModelRepository):
 
     @BaseModelRepository.provide_db_conn()
     async def get_by_subject_id(self, subject_id: int,
-                  session: AsyncSession) -> StudentSellOffer:
+                                session: AsyncSession,
+                                seller_id: int = None,
+                                ) -> StudentSellOffer:
+        query_kwargs = dict(subject_id=subject_id) | (dict(seller_id=seller_id) if seller_id else {})
+
+        print(query_kwargs)
+
         return (await session.execute(select(self._model).filter_by(
-            subject_id=subject_id
+            **query_kwargs,
         ))).scalars().one_or_none()
 
     @BaseModelRepository.provide_db_conn()

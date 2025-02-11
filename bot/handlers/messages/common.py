@@ -26,8 +26,6 @@ async def start(message: Message,
                 user_service: UserService):
     user_type, user = await user_service.get_user(telegram_id=message.chat.id)
 
-    print(f"STARTED WITH {user_type=} {user=}")
-
     if (command.args and
             user_type == UserType.UNKNOWN and
             ("student" in command.args)):

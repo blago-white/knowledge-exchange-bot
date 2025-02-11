@@ -13,6 +13,7 @@ async def generate_main_stats_message_text(
 
     return template.format(
         user_id=worker.id,
+        balance=worker.balance,
         selled_students=await workers_service.get_selled_count(),
         week_profit=str(week_profit),
         total_profit=await workers_service.get_total_profit(),
