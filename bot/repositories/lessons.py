@@ -63,7 +63,7 @@ class LessonsModelRepository(DefaultModelRepository):
                                  subject_id: int):
         return (await session.execute(select(self._model).filter_by(
             subject_id=subject_id
-        ))).scalars()
+        ).order_by("date"))).scalars()
 
     @BaseModelRepository.provide_db_conn()
     async def get_lessons_for_period(self, subject_id: int,
@@ -76,7 +76,7 @@ class LessonsModelRepository(DefaultModelRepository):
         ).where(
             Lesson.date >= start,
             Lesson.date <= end
-        ))).scalars()
+        ).order_by("date"))).scalars()
 
     @BaseModelRepository.provide_db_conn()
     async def get_week_lessons_pay(

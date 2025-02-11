@@ -157,11 +157,3 @@ async def set_accept_value_sell_offer(
                  f"Ученик по предмету {offer.subject.title} и стоимостью {offer.cost}\n"
                  f"Был куплен статус оплат смотрите в главном меню > проданные ученики!"
         )
-
-
-@router.callback_query()
-async def view_msg(
-        query: CallbackQuery,
-        state: FSMContext):
-    print(query.data)
-    await query.answer()

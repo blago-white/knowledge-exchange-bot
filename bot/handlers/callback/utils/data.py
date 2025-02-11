@@ -95,3 +95,7 @@ class MyChatsListData(CallbackData, prefix="chats"):
 
 class LessonCompliteData(CallbackData, prefix="complete-lesson"):
     lesson_id: int
+
+
+class StopSubjectData(CallbackData, prefix="stop-subject"):
+    subject_id: int

@@ -159,6 +159,10 @@ async def show_subject_profile(
         subject: Subject = await subjects_service.retrieve(
             worker_id=worker_id
         )
+    except PermissionError:
+        return await query.answer(
+            "Ошибка прав, возможно проданный ученик уже выплачен"
+        )
     except:
         return await query.answer(
             "Вы не можете просмотреть профиль этого ученика!"

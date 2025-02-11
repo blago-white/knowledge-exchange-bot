@@ -191,6 +191,16 @@ class SubjectsService(BaseModelService):
 
         raise ValueError("You is not owner!")
 
+    async def invert_active_status(self, worker_id: int):
+        subject = await self._repository.get(pk=self._subject_id)
+
+        if subject.worker_id != worker_id:
+            raise PermissionError()
+
+        return await self._repository.update(
+            pk=self._subject_id, is_active=not subject.is_active
+        )
+
     async def initialize(self, data: SubjectsInitializingData) -> int:
         return (await self._repository.create(
             subject_data=Subject(**data.__dict__)
@@ -201,14 +211,15 @@ class SubjectsService(BaseModelService):
         if await self.repository.worker_has_subject(
                 subject_id=self._subject_id, worker_id=worker_id
         ):
-            lessons: list[Lesson] = list((await self.repository.get(
+            lesson: Lesson
+            lessons: list[Lesson] = sorted(list((await self.repository.get(
                 pk=self._subject_id,
                 exclude_related_cols=[
                     Subject.sell_offers,
                     Subject.messages,
                     Subject.student,
                 ]
-            )).lessons)
+            )).lessons), key=lambda lesson: lesson.date)
 
             # if for_payment:
             #     lessons = [l for l in lessons if l.for_offer_payment]

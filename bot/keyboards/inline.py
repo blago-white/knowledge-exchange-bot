@@ -127,7 +127,7 @@ def get_subject_details_kb(subject: Subject,
                 text="🏁 Уже закончили учится"
                 if subject.is_active else
                 "🏳 Вернуть активный статус",
-                callback_data="None"
+                callback_data=data.StopSubjectData(subject_id=subject.id).pack()
             )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="✏ Кое-что нужно поправить",

@@ -126,10 +126,15 @@ class WorkersService(BaseModelService):
     ) -> "StudentSellOffer":
         await self._check_selled_subject(subject_id=subject_id)
 
-        return await self.sell_offers_repository.get_by_subject_id(
+        offer = await self.sell_offers_repository.get_by_subject_id(
             subject_id=subject_id,
             seller_id=seller_id
         )
+
+        if offer.is_paid:
+            raise PermissionError("Offer is paid")
+
+        return offer
 
     async def get_active_subjects(self) -> list["Subject"]:
         return self.workers_repository.get(
@@ -167,8 +172,6 @@ class WorkersService(BaseModelService):
         )
 
         selled_amount = await self.sell_offers_repository.get_total_revenue(worker_id=self._worker_id)
-
-        print(f"{profit_for_lessons=} {selled_amount=}")
 
         return profit_for_lessons + selled_amount
 
@@ -223,8 +226,4 @@ class WorkersService(BaseModelService):
         if await self.sell_offers_repository.is_unpayed(
                 worker_id=self._worker_id, subject_id=subject_id
         ):
-            print(await self.sell_offers_repository.is_unpayed(
-                worker_id=self._worker_id, subject_id=subject_id
-            ))
-            print(await self.sell_offers_repository.get_all())
             raise Exception("Student payments is not complete!")
