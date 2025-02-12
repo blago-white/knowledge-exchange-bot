@@ -99,3 +99,14 @@ class LessonCompliteData(CallbackData, prefix="complete-lesson"):
 
 class StopSubjectData(CallbackData, prefix="stop-subject"):
     subject_id: int
+
+
+# class SposDescXopeGrivIses
+
+
+class EditLessonData(CallbackData, prefix="edit-lesson"):
+    open_menu: bool = False
+    lesson_id: int = -1
+    subject_id: int = -1
+    edit_date: bool = False
+    edit_record_link: bool = False

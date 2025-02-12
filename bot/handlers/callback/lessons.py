@@ -9,17 +9,18 @@ from aiogram.types import (ReplyKeyboardRemove,
 
 from keyboards.inline import (get_lesson_data_inline_kb,
                               get_lesson_commiting_kb,
-                              get_subject_lessons_kb)
+                              get_subject_lessons_kb,
+                              get_edit_lesson_kb)
 from models.lesson import Lesson
 from services.lesson import LessonsService
 from services.exceptions.lessons import (CompliteLessonDateUncorrect,
                                          StudentBalanceEmpty)
+from handlers.states import lessons as lessons_states
 
 from ..callback.utils import data
 from ..common.utils.messages import generate_lesson_data_message_text
 from ..providers import provide_model_service
 from ..replies import LESSON_DATA_MESSAGE
-from handlers.states import lessons as lessons_states
 
 router = Router(name=__name__)
 
@@ -248,7 +249,6 @@ async def complete_lesson(
 
         return
     except Exception as e:
-        print(e)
         return await query.answer("Что-то пошло не так, напишите в поддержку")
     else:
         await query.answer()
@@ -307,3 +307,37 @@ async def complete_lesson(
             chat_id=chat_id,
             text="📛 <b>У ученика не осталось баланса на следующие уроки!</b>"
         )
+
+
+@router.callback_query(data.EditLessonData.filter())
+async def edit_lesson(
+        query: CallbackQuery,
+        callback_data: data.EditLessonData,
+        state: FSMContext):
+    await query.answer()
+
+    if callback_data.open_menu:
+        return await query.message.edit_reply_markup(
+            reply_markup=get_edit_lesson_kb(
+                lesson_id=callback_data.lesson_id,
+                subject_id=callback_data.subject_id
+            )
+        )
+
+    elif callback_data.edit_record_link:
+        await state.set_state(state=lessons_states.EditLessonDataForm().edit_record_link)
+
+        await query.message.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🎥 Введите ссылку на запись:"
+        )
+
+    elif callback_data.edit_date:
+        await state.set_state(state=lessons_states.EditLessonDataForm().edit_datetime)
+
+        await query.message.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="📆 Введите новую дату и время:"
+        )
+
+    await state.set_data(data=dict(lesson_id=callback_data.lesson_id))

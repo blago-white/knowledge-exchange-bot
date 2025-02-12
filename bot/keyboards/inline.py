@@ -230,10 +230,21 @@ def get_lesson_data_inline_kb(lesson_id: int, subject_id: int, seller_view: bool
                 callback_data=data.LessonCompliteData(
                     lesson_id=lesson_id
                 ).pack()
+            ), InlineKeyboardButton(
+                text="✏ Изменить",
+                callback_data=data.EditLessonData(open_menu=True,
+                                                  lesson_id=lesson_id,
+                                                  subject_id=subject_id).pack()
             )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="👤⬅ К ученику",
                 callback_data=data.StudentProfileData(
+                    subject_id=subject_id,
+                    seller_view=False
+                ).pack()
+            ), InlineKeyboardButton(
+                text="📆⬅ К урокам",
+                callback_data=data.GetSubjectLessonsData(
                     subject_id=subject_id,
                     seller_view=False
                 ).pack()
@@ -423,4 +434,68 @@ def get_accept_sell_offer_kb(offer_id: int):
                 ).pack()
             )
         ]]
+    )
+
+
+def get_edit_lesson_kb(lesson_id: int, subject_id: int):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="👥 Учитель",
+                callback_data="None"
+            )],
+            [InlineKeyboardButton(
+                text="⛔ Удалить урок",
+                callback_data=data.DropLessonData(
+                    lesson_id=lesson_id,
+                    many=False
+                ).pack()
+            ), InlineKeyboardButton(
+                text="✅ Провели урок",
+                callback_data=data.LessonCompliteData(
+                    lesson_id=lesson_id
+                ).pack()
+            )],
+            [InlineKeyboardButton(
+                text="🎥 Изменить запись",
+                callback_data=data.EditLessonData(
+                    open_menu=False,
+                    lesson_id=lesson_id,
+                    subject_id=subject_id,
+                    edit_date=False,
+                    edit_record_link=True
+                ).pack()
+            ), InlineKeyboardButton(
+                text="📆 Изменить дату и длительность",
+                callback_data=data.EditLessonData(
+                    open_menu=False,
+                    lesson_id=lesson_id,
+                    subject_id=subject_id,
+                    edit_record_link=False,
+                    edit_date=True
+                ).pack()
+            )],
+            [InlineKeyboardButton(
+                text="👤⬅ К ученику",
+                callback_data=data.StudentProfileData(
+                    subject_id=subject_id,
+                    seller_view=False
+                ).pack()
+            ), InlineKeyboardButton(
+                text="📆⬅ К урокам",
+                callback_data=data.GetSubjectLessonsData(
+                    subject_id=subject_id,
+                    seller_view=False
+                ).pack()
+            )],
+            [InlineKeyboardButton(
+                text="📕⬅ К списку учеников",
+                callback_data=data.GetWorkerSubjectsData(
+                    filter=data.WorkerSubjectsFilters.ALL
+                ).pack()
+            ), InlineKeyboardButton(
+                text="⬅ К меню",
+                callback_data=data.TO_HOME_DATA
+            )],
+        ]
     )

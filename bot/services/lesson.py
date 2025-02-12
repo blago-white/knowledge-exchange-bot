@@ -211,7 +211,6 @@ class SubjectsService(BaseModelService):
         if await self.repository.worker_has_subject(
                 subject_id=self._subject_id, worker_id=worker_id
         ):
-            lesson: Lesson
             lessons: list[Lesson] = sorted(list((await self.repository.get(
                 pk=self._subject_id,
                 exclude_related_cols=[
@@ -220,9 +219,6 @@ class SubjectsService(BaseModelService):
                     Subject.student,
                 ]
             )).lessons), key=lambda lesson: lesson.date)
-
-            # if for_payment:
-            #     lessons = [l for l in lessons if l.for_offer_payment]
 
             return lessons
 

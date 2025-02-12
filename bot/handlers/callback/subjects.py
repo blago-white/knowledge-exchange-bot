@@ -49,3 +49,10 @@ async def subject_deactivate(
         )
 
     return await query.answer("Готово!")
+
+
+@router.callback_query()
+async def show_(
+        query: CallbackQuery,
+        state: FSMContext):
+    print(query.data, "WQWW")
