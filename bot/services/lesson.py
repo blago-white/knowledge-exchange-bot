@@ -61,6 +61,7 @@ class LessonsService(BaseModelService):
             raise PermissionError("You not teacher!")
 
         lesson_rate = lesson.overriten_rate or lesson.subject.rate
+        print(lesson.overriten_rate or lesson.subject.rate)
         lesson_price = lesson_rate * (lesson.duration / 60) * int(not lesson.is_free)
 
         print(f"LESSON PRICE: {lesson_price} = {lesson_rate} * {lesson.duration} / 60")

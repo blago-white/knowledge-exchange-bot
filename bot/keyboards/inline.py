@@ -396,19 +396,48 @@ def get_lesson_commiting_kb(is_free: bool = False, is_scheduled: bool = False):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
+                text="🕒 x1",
+                callback_data=data.LessonCommitViewCallbackData(
+                    make_free=True,
+                    make_scheduled=True,
+                    schedule_factor=1,
+                ).pack()
+            ), InlineKeyboardButton(
+                text="🕒 x2",
+                callback_data=data.LessonCommitViewCallbackData(
+                    make_free=True,
+                    make_scheduled=True,
+                    schedule_factor=2,
+                ).pack()
+            ), InlineKeyboardButton(
+                text="🕒 x3",
+                callback_data=data.LessonCommitViewCallbackData(
+                    make_free=True,
+                    make_scheduled=True,
+                    schedule_factor=3,
+                ).pack()
+            ), InlineKeyboardButton(
+                text="🕒 x4",
+                callback_data=data.LessonCommitViewCallbackData(
+                    make_free=True,
+                    make_scheduled=True,
+                    schedule_factor=4,
+                ).pack()
+            )],
+            [InlineKeyboardButton(
                 text="☑ Бесплатный урок" if not is_free else "✅ Бесплатный урок",
                 callback_data=data.LessonCommitViewCallbackData(
                     make_free=True
                 ).pack()
             )],
-            [InlineKeyboardButton(
-                text="🕒 Сделать постоянным"
-                if not is_scheduled else
-                "🕒 Уже постоянный",
-                callback_data=data.LessonCommitViewCallbackData(
-                    make_scheduled=True
-                ).pack()
-            )],
+            # [InlineKeyboardButton(
+            #     text="🕒 Сделать постоянным"
+            #     if not is_scheduled else
+            #     "🕒 Уже постоянный",
+            #     callback_data=data.LessonCommitViewCallbackData(
+            #         make_scheduled=True
+            #     ).pack()
+            # )],
             [InlineKeyboardButton(
                 text="📌 Создать урок",
                 callback_data=data.LessonCommitViewCallbackData(

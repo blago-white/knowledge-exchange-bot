@@ -46,6 +46,8 @@ class LessonsModelRepository(DefaultModelRepository):
              lesson_dates]
         )
 
+        await session.commit()
+
     @BaseModelRepository.provide_db_conn()
     async def get_completed_lessons_payment_amount(
             self, subjects: typing.Collection[Subject],
@@ -84,7 +86,7 @@ class LessonsModelRepository(DefaultModelRepository):
     ):
         start_week, end_week = self._get_week_borders()
 
-        pay_sum = (await session.execute(select(
+        pay_sum = list(await session.execute(select(
             func.sum(
                 self._model.overriten_rate *
                 self._model.duration *
@@ -99,8 +101,10 @@ class LessonsModelRepository(DefaultModelRepository):
             self._model.date >= start_week,
             self._model.date < end_week,
             self._model.subject_id.in_(subjects_ids),
+        ).group_by(self._model.id))).copy()
 
-        ).group_by(self._model.id)))
+        print("WOWWWW", [(pay[0] or pay[1]) for pay in pay_sum], sum([(pay[0] or pay[1]) for pay in pay_sum]))
+        print("WOWWWW", [(pay[0] or pay[1]) for pay in pay_sum], sum([(pay[0] or pay[1]) for pay in pay_sum]))
 
         return sum([(pay[0] or pay[1]) for pay in pay_sum])
 

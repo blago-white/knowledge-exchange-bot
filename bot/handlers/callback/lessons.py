@@ -120,25 +120,27 @@ async def lesson_creation_form_action(
     match action:
         case "commit_lesson":
             try:
-                await lessons_service.repository.create(
-                    lesson_data=Lesson(
+                factor = dict(await state.get_data()).get("factor", 1)
+
+                await lessons_service.repository.bulk_create_lessons(
+                    lesson_data=dict(
                         date=data_.get("datetime"),
                         duration=data_.get("duration"),
                         is_free=data_.get("is_free", False),
                         subject_id=data_.get("subject_id")
-                    )
+                    ),
+                    copies=int(factor)
                 )
-            except:
+            except Exception as e:
+                print(e)
                 return await query.message.edit_text(
-                    text="⭕ <b>Ошибка создания урока, обратитесь в поддержку!</b>",
-                    reply_markup=ReplyKeyboardRemove
-                )
+                    text="⭕ <b>Ошибка создания урока, обратитесь в поддержку!</b>")
+
+            await query.message.edit_reply_markup()
 
             await query.message.edit_text(
                 text="✅ <b>Урок создан</b>",
             )
-
-            await query.message.edit_reply_markup()
 
         case "make_free":
             await state.set_data(
@@ -153,11 +155,16 @@ async def lesson_creation_form_action(
             )
 
         case "make_scheduled":
-            await query.answer("Скоро будет...")
+            await query.answer(f"Повторили урок {callback_data.schedule_factor} раз.")
+
+            await state.set_data(data=(await state.get_data()) | {
+                "factor": callback_data.schedule_factor
+            })
+
             await query.message.edit_reply_markup(
                 reply_markup=get_lesson_commiting_kb(
                     is_free=data_.get("is_free"),
-                    is_scheduled=data_.get("is_scheduled")
+                    is_scheduled=True
                 )
             )
 

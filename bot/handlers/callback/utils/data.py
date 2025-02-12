@@ -66,6 +66,7 @@ class AddLessonData(CallbackData, prefix="lesson-add"):
 class LessonCommitViewCallbackData(CallbackData, prefix="lesson-commit"):
     make_free: bool = False
     make_scheduled: bool = False
+    schedule_factor: int = 1
     commit_lesson: bool = False
 
 
