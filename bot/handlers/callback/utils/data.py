@@ -15,6 +15,12 @@ class WorkerSubjectsFilters(Enum):
     ALL = "A"
 
 
+class SubjectEditField(Enum):
+    DESCRIPTION = "D"
+    TITLE = "T"
+    RATE = "R"
+
+
 TO_HOME_DATA = "go-to-profile"
 
 
@@ -110,3 +116,9 @@ class EditLessonData(CallbackData, prefix="edit-lesson"):
     subject_id: int = -1
     edit_date: bool = False
     edit_record_link: bool = False
+
+
+class EditSubjectData(CallbackData, prefix="edit-subject"):
+    subject_id: int = -1
+    open_menu: bool = False
+    edit_field: SubjectEditField = SubjectEditField.TITLE

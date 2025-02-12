@@ -1,5 +1,5 @@
 from models.worker import Worker
-from models.lesson import Lesson, LessonStatus
+from models.lesson import Lesson, LessonStatus, Subject
 from models.student import Student, StudentSellOffer
 from services.worker import WorkersService
 
@@ -61,3 +61,14 @@ def generate_student_main_message(template: str,
         balance=int(student.balance),
         next_lesson=next_lesson_template
     )
+
+
+def generate_subject_details_message(subject: Subject,
+                                     selled_prefix: str = "") -> str:
+    return f"""📍 {selled_prefix} <b>{subject.student.name} [{subject.student.city}]</b>
+📕 Предмет — <i>{subject.title}
+🕑 Ставка — {subject.rate}₽/ч</i>
+👤 О ученике — <i>{subject.student.description or 'пока ничего не известно('}</i>
+
+<i>{"— " + (subject.description or "Кажется, заметок еще нет!")}</i>
+"""

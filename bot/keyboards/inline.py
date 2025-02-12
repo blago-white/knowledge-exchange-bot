@@ -106,9 +106,10 @@ def get_subjects_table_kb(subjects: list[Subject]):
     )
 
 
-def get_subject_details_kb(subject: Subject,
-                           seller_view: bool = True,
-                           seller_id: int = None):
+def get_subject_details_kb(
+        subject: Subject,
+        seller_view: bool = True,
+        seller_id: int = None):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
@@ -127,11 +128,15 @@ def get_subject_details_kb(subject: Subject,
                 text="🏁 Уже закончили учится"
                 if subject.is_active else
                 "🏳 Вернуть активный статус",
-                callback_data=data.StopSubjectData(subject_id=subject.id).pack()
+                callback_data=data.StopSubjectData(
+                    subject_id=subject.id).pack()
             )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="✏ Кое-что нужно поправить",
-                callback_data="None"
+                callback_data=data.EditSubjectData(
+                    open_menu=True,
+                    subject_id=subject.id,
+                ).pack()
             )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="💰 Продать ученика",
@@ -152,10 +157,49 @@ def get_subject_details_kb(subject: Subject,
     )
 
 
-def get_subject_lessons_kb(subject_id: int,
-                           lessons: list[Lesson],
-                           seller_id: int = -1,
-                           seller_view: bool = False):
+def get_subject_edit_kb(subject_id: int):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="🔖 Изменить название",
+                callback_data=data.EditSubjectData(
+                    open_menu=False,
+                    subject_id=subject_id,
+                    edit_field=data.SubjectEditField.TITLE
+                ).pack()
+            ), InlineKeyboardButton(
+                text="💭 Изменить описание",
+                callback_data=data.EditSubjectData(
+                    open_menu=False,
+                    subject_id=subject_id,
+                    edit_field=data.SubjectEditField.DESCRIPTION
+                ).pack()
+            ), InlineKeyboardButton(
+                text="🕑 Изменить ставку",
+                callback_data=data.EditSubjectData(
+                    open_menu=False,
+                    subject_id=subject_id,
+                    edit_field=data.SubjectEditField.RATE
+                ).pack()
+            )],
+            [InlineKeyboardButton(
+                text="📕⬅ К списку учеников",
+                callback_data=data.GetWorkerSubjectsData(
+                    filter=data.WorkerSubjectsFilters.ALL
+                ).pack()
+            ), InlineKeyboardButton(
+                text="⬅ К меню",
+                callback_data=data.TO_HOME_DATA
+            )],
+        ]
+    )
+
+
+def get_subject_lessons_kb(
+        subject_id: int,
+        lessons: list[Lesson],
+        seller_id: int = -1,
+        seller_view: bool = False):
     lessons_kb, lessons_kb_row = [], []
 
     for lesson in lessons:
@@ -212,7 +256,8 @@ def get_subject_lessons_kb(subject_id: int,
     )
 
 
-def get_lesson_data_inline_kb(lesson_id: int, subject_id: int, seller_view: bool = False):
+def get_lesson_data_inline_kb(
+        lesson_id: int, subject_id: int, seller_view: bool = False):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
@@ -382,9 +427,9 @@ def get_selled_list_inline_kb(selled: list[StudentSellOffer]):
             text=f"{"✅" if s.is_paid else (
                 "✴" if s.is_accepted else "📤"
             )} | "
-            f"{s.subject.student.name} | "
-            f"{s.subject.title} | "
-            f"{s.paid_sum}₽/{s.cost}₽",
+                 f"{s.subject.student.name} | "
+                 f"{s.subject.title} | "
+                 f"{s.paid_sum}₽/{s.cost}₽",
             callback_data=data.StudentProfileData(
                 subject_id=s.subject.id,
                 seller_view=True
