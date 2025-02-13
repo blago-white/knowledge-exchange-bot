@@ -23,6 +23,8 @@ class SubjectEditField(Enum):
 
 TO_HOME_DATA = "go-to-profile"
 
+ABOUT_INFO_DATA = "about"
+
 
 class RenderProfileData(CallbackData, prefix="profile"):
     show_profile: bool

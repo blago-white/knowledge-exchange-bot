@@ -150,12 +150,12 @@ async def lesson_creation_form_action(
             await query.message.edit_reply_markup(
                 reply_markup=get_lesson_commiting_kb(
                     is_free=not data_.get("is_free"),
-                    is_scheduled=data_.get("is_scheduled")
+                    schedule=data_.get("factor")
                 )
             )
 
         case "make_scheduled":
-            await query.answer(f"Повторили урок {callback_data.schedule_factor} раз.")
+            await query.answer(f"Повторили урок на {callback_data.schedule_factor} недели")
 
             await state.set_data(data=(await state.get_data()) | {
                 "factor": callback_data.schedule_factor
@@ -164,7 +164,7 @@ async def lesson_creation_form_action(
             await query.message.edit_reply_markup(
                 reply_markup=get_lesson_commiting_kb(
                     is_free=data_.get("is_free"),
-                    is_scheduled=True
+                    schedule=callback_data.schedule_factor
                 )
             )
 

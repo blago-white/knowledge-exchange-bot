@@ -101,8 +101,8 @@ async def _react_description(state: FSMContext, query: CallbackQuery):
     )
 
 
-@router.callback_query()
-async def handle(
-        query: CallbackQuery,
-        state: FSMContext):
-    print(query.data)
+# @router.callback_query()
+# async def handle(
+#         query: CallbackQuery,
+#         state: FSMContext):
+#     print(query.data)

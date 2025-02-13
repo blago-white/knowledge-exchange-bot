@@ -14,16 +14,12 @@ router = Router(name=__name__)
 
 
 @router.message(Command("sell"))
-@provide_model_service(WorkersService)
-async def sell_student_info(
-        message: Message,
-        state: FSMContext,
-        workers_service: WorkersService):
+async def sell_student_info(message: Message):
     return await message.reply(
-        text="<i>ℹ Продать ученика вы можете зная telegram id репетитора, "
-             "которому продаете</i>\n\n"
-             "Для продажи: Меню > Мои ученики > *Ученик для продажи* > "
-             "Нажмите 'Продать' и после введите id получателя\n\n"
+        text="ℹ <b>Продать ученика вы можете зная <i>telegram id</i> репетитора, "
+             "которому продаете</b>\n\n"
+             "<i>Для продажи: Меню > Мои ученики > *Ученик для продажи* > "
+             "Нажмите 'Продать' и после введите id получателя</i>\n\n"
              "Когда получатель примет предложение, по мере проведения уроков"
              "вам будет начисляться оплата на счет"
     )

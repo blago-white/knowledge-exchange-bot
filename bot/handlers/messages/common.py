@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.filters.command import CommandStart, CommandObject
+from aiogram.filters.command import CommandStart, CommandObject, Command
 from aiogram.types import Message
 
 from keyboards.inline import get_home_inline_kb
@@ -97,3 +97,13 @@ async def start(message: Message,
             ),
             reply_markup=get_home_inline_kb(),
         )
+
+
+@router.message(Command("support"))
+async def get_support(message: Message):
+    await message.bot.send_message(
+        chat_id=message.chat.id,
+        text="📝 <b>При любых вопросах/предложениях/если "
+             "нашли ошибку - @VictorMerinov</b>\n\n"
+             "<i>🕘 Работаем с 12:00 до 23:59</i>"
+    )

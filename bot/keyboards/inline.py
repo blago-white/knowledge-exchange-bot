@@ -44,7 +44,7 @@ def get_home_inline_kb():
             )],
             [InlineKeyboardButton(
                 text="🛡 О \"ИП Логинов Богдан Николаевич\"",
-                callback_data="None"
+                callback_data=data.ABOUT_INFO_DATA
             )]
         ]
     )
@@ -340,8 +340,8 @@ def get_week_schedule_keyboard(
 
     if lessons:
         lessons_kb.append([InlineKeyboardButton(
-            text=f"⚜ {get_day_label(date=lessons[0].date_msc)} "
-                 f"{convert_date_to_day(lessons[0].display_date)} ⚜",
+            text=f"{get_day_label(date=lessons[0].date_msc)} "
+                 f"{convert_date_to_day(lessons[0].display_date)}",
             callback_data="None"
         )])
 
@@ -361,7 +361,7 @@ def get_week_schedule_keyboard(
                 lessons_kb.append([day_lessons_buttons_pair.pop()])
 
             lessons_kb.append([InlineKeyboardButton(
-                text=f"⚜ {get_day_label(date=lesson.date_msc)} {lesson_date} ⚜",
+                text=f"{get_day_label(date=lesson.date_msc)} {lesson_date}",
                 callback_data="None"
             )])
 
@@ -371,7 +371,7 @@ def get_week_schedule_keyboard(
             current_day = lesson_date
 
         day_lessons_buttons_pair.append(InlineKeyboardButton(
-            text=f"{lesson_status} "
+            text=f"{"🎁" if lesson.is_free else ""}{lesson_status} "
                  f"{lesson.display_date} "
                  f"{lesson.display_duration}",
             callback_data=data.ShowLessonInfoData(
@@ -392,32 +392,25 @@ def get_week_schedule_keyboard(
     return InlineKeyboardMarkup(inline_keyboard=lessons_kb)
 
 
-def get_lesson_commiting_kb(is_free: bool = False, is_scheduled: bool = False):
+def get_lesson_commiting_kb(is_free: bool = False, schedule: int = None):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(
-                text="🕒 x1",
-                callback_data=data.LessonCommitViewCallbackData(
-                    make_free=True,
-                    make_scheduled=True,
-                    schedule_factor=1,
-                ).pack()
-            ), InlineKeyboardButton(
-                text="🕒 x2",
+                text=f"{"🕒" if schedule != 2 else "✅"} x2",
                 callback_data=data.LessonCommitViewCallbackData(
                     make_free=True,
                     make_scheduled=True,
                     schedule_factor=2,
                 ).pack()
             ), InlineKeyboardButton(
-                text="🕒 x3",
+                text=f"{"🕒" if schedule != 3 else "✅"} x3",
                 callback_data=data.LessonCommitViewCallbackData(
                     make_free=True,
                     make_scheduled=True,
                     schedule_factor=3,
                 ).pack()
             ), InlineKeyboardButton(
-                text="🕒 x4",
+                text=f"{"🕒" if schedule != 4 else "✅"} x4",
                 callback_data=data.LessonCommitViewCallbackData(
                     make_free=True,
                     make_scheduled=True,
