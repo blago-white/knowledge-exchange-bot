@@ -6,6 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 
 from handlers.callback.utils import data
 from models.lesson import Lesson, Subject, LessonStatus
+from models.dialog import Message
 from models.student import StudentSellOffer
 
 _LESSON_STATUSES = {
@@ -144,6 +145,13 @@ def get_subject_details_kb(
                     subject_id=subject.id
                 ).pack()
             )] if not seller_view else [],
+            [InlineKeyboardButton(
+                text="💬 Написать сообщение" if subject.student.telegram_id is not None else "❌💬 Ученик не перешел по ссылке",
+                callback_data=data.SendMessageData(
+                    subject_id=subject.id,
+                    recipient_id=subject.student.telegram_id or 0
+                ).pack()
+            )],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
                 callback_data=data.GetWorkerSubjectsData(
@@ -372,7 +380,7 @@ def get_week_schedule_keyboard(
 
         day_lessons_buttons_pair.append(InlineKeyboardButton(
             text=f"{"🎁" if lesson.is_free else ""}{lesson_status} "
-                 f"{lesson.display_date} "
+                 f"{lesson.subject.title} | "
                  f"{lesson.display_duration}",
             callback_data=data.ShowLessonInfoData(
                 lesson_id=lesson.id,
@@ -566,3 +574,54 @@ def get_edit_lesson_kb(lesson_id: int, subject_id: int):
             )],
         ]
     )
+
+
+def get_chats_keyboard(previews: list[Message]):
+    chats_kb = []
+
+    for p in previews:
+        chats_kb.append([InlineKeyboardButton(
+            text=f"{p.subject.student.name} | {p.subject.student.city} [{p.subject.title}]",
+            callback_data=data.OpenChatData(subject_id=p.subject_id).pack()
+        )])
+
+    chats_kb.append([InlineKeyboardButton(
+        text="⬅ К меню",
+        callback_data=data.TO_HOME_DATA
+    )])
+
+    return InlineKeyboardMarkup(inline_keyboard=chats_kb)
+
+
+def get_student_menu_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="➕ Пополнить баланс",
+            callback_data=data.ShowWeekSchedule().pack()
+        )],
+        [InlineKeyboardButton(
+            text="📕 Мои предметы",
+            callback_data=data.ShowWeekSchedule().pack()
+        ), InlineKeyboardButton(
+            text="📆 Расписание",
+            callback_data=data.ShowWeekSchedule(worker_view=False).pack()
+        ), InlineKeyboardButton(
+            text="💬 Ваши Чаты",
+            callback_data=data.MyChatsListData().pack()
+        )]
+    ])
+
+
+def get_chat_message_reply_kb(subject_id: int,
+                              parent_msg_id: int,
+                              recipient_id: int):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="📝 Ответить",
+            callback_data=data.SendMessageData(
+                subject_id=subject_id,
+                parent_msg_id=parent_msg_id,
+                recipient_id=recipient_id
+            ).pack()
+        )],
+    ])

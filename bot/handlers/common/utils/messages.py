@@ -1,6 +1,8 @@
 from models.worker import Worker
 from models.lesson import Lesson, LessonStatus, Subject
 from models.student import Student, StudentSellOffer
+from services.user import UserType
+from models.dialog import Message
 from services.worker import WorkersService
 
 
@@ -72,3 +74,18 @@ def generate_subject_details_message(subject: Subject,
 
 <i>{"— " + (subject.description or "Кажется, заметок еще нет!")}</i>
 """
+
+
+def generate_dialog_history_message(self_type: UserType, dialog: list[Message]):
+    text = f""
+
+    for message in dialog:
+        self_message = str(message.sender) == str(self_type)
+
+        print(str(message.sender), str(self_type))
+
+        text += (f"{"—" if self_message else "🗣 —"} "
+                 f"[{message.display_sended_at}] "
+                 f"<i>{message.text}</i>\n")
+
+    return text

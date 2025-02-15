@@ -3,7 +3,18 @@ from aiogram.types.input_file import InputFile, FSInputFile
 from aiogram.filters.callback_data import CallbackData, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from .utils.data import ABOUT_INFO_DATA
+from services.user import UserService, UserType
+from services.worker import WorkersService
+from services.student import StudentsService
+from keyboards.inline import get_home_inline_kb, get_student_menu_kb
+from handlers.providers import provide_model_service
+
+from ..replies import (START_MESSAGE,
+                       STUDENT_START_MESSAGE,
+                       STUDENT_NEXT_LESSON_LABEL_EMPTY,
+                       STUDENT_NEXT_LESSON_LABEL_EXISTS)
+from ..common.utils.messages import generate_main_stats_message_text, generate_student_main_message
+from .utils.data import ABOUT_INFO_DATA, TO_HOME_DATA
 
 router = Router(name=__name__)
 
@@ -38,3 +49,49 @@ async def show_about(query: CallbackQuery):
             "D:\FDISKCOPY\python\knowledge-exchange-bot\\bot\static\iam.jpg"
         ),
     )
+
+
+@router.callback_query(F.data == TO_HOME_DATA)
+@provide_model_service(UserService, WorkersService, StudentsService)
+async def go_home_screen(
+        query: CallbackQuery,
+        user_service: UserService,
+        workers_service: WorkersService,
+        students_service: StudentsService,
+        state: FSMContext):
+    await state.clear()
+
+    user_type, user = await user_service.get_user(
+        telegram_id=query.message.chat.id
+    )
+
+    if user_type == UserType.WORKER:
+        await query.bot.edit_message_text(
+            text=await generate_main_stats_message_text(
+                template=START_MESSAGE,
+                workers_service=workers_service,
+                worker=user
+            ),
+            reply_markup=get_home_inline_kb(),
+            message_id=query.message.message_id,
+            chat_id=query.message.chat.id,
+        )
+    else:
+        students_service.student_id = query.message.chat.id
+
+        nearest_lesson = await students_service.get_nearest_lesson()
+
+        await query.bot.edit_message_text(
+            text=generate_student_main_message(
+                template=STUDENT_START_MESSAGE,
+                next_lesson_template=STUDENT_NEXT_LESSON_LABEL_EXISTS
+                if nearest_lesson else
+                STUDENT_NEXT_LESSON_LABEL_EMPTY,
+                next_lesson=nearest_lesson,
+                student=user,
+                meet_link=nearest_lesson.subject.worker.meet_link if nearest_lesson else ""
+            ),
+            reply_markup=get_student_menu_kb(),
+            message_id=query.message.message_id,
+            chat_id=query.message.chat.id,
+        )

@@ -54,30 +54,6 @@ async def render_profile(
     )
 
 
-@router.callback_query(F.data == TO_HOME_DATA)
-@provide_model_service(WorkersService)
-async def go_home_screen(
-        query: CallbackQuery,
-        workers_service: WorkersService,
-        state: FSMContext):
-    await state.clear()
-
-    worker: Worker = await workers_service.repository.get(
-        pk=query.message.chat.id
-    )
-
-    await query.bot.edit_message_text(
-        text=await generate_main_stats_message_text(
-            template=START_MESSAGE,
-            workers_service=workers_service,
-            worker=worker
-        ),
-        reply_markup=get_home_inline_kb(),
-        message_id=query.message.message_id,
-        chat_id=query.message.chat.id,
-    )
-
-
 @router.callback_query(UpdateProfileInfoData.filter(
     F.update_field != None
 ))
@@ -176,6 +152,7 @@ async def show_subject_profile(
         text=f"📍 {selled_prefix} "
              f"<b>{subject.student.name} [{subject.student.city}]</b>\n"
              f"📕 Предмет — <i>{subject.title}\n"
+             f"💰 Баланс ученика — {subject.student.balance}₽"
              f"🕑 Ставка — {subject.rate}₽/ч</i>\n"
              f"👤 О ученике — <i>{
              subject.student.description or 'пока ничего не известно('
@@ -247,9 +224,14 @@ async def show_week_schedule(
         callback_data: ShowWeekSchedule,
         state: FSMContext,
         lessons_service: LessonsService):
-    lessons = await lessons_service.repository.get_week_lessons(
-        worker_id=query.message.chat.id
-    )
+    if callback_data.worker_view:
+        lessons = await lessons_service.repository.get_week_lessons(
+            worker_id=query.message.chat.id
+        )
+    else:
+        lessons = await lessons_service.repository.get_student_week_lessons(
+            student_id=query.message.chat.id
+        )
 
     await query.message.edit_text(
         text=f"📆 <b>{"А вот ваши уроки на неделю:" if lessons else "На этой неделе уроков не планируется!"}</b>",

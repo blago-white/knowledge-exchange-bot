@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import exists, select
+from sqlalchemy import exists, select, or_
 
+from models.student import Student
 from models.lesson import Subject
 from .base import DefaultModelRepository, BaseModelRepository
 
@@ -31,3 +32,16 @@ class SubjectsModelRepository(DefaultModelRepository):
         return list((await session.execute(select(self._model).filter_by(
             worker_id=worker_id
         ))).scalars())
+
+    @BaseModelRepository.provide_db_conn()
+    async def get_all(self, session: AsyncSession,
+                      user_id: int = None):
+        query = select(self._model)
+
+        if user_id:
+            query = query.filter(or_(
+                self._model.worker_id == user_id,
+                Student.telegram_id == user_id
+            ))
+
+        return list((await session.execute(query)).unique().scalars())

@@ -11,8 +11,8 @@ from keyboards.inline import (get_lesson_data_inline_kb,
                               get_lesson_commiting_kb,
                               get_subject_lessons_kb,
                               get_edit_lesson_kb)
-from models.lesson import Lesson
-from services.lesson import LessonsService
+from models.lesson import Lesson, Subject
+from services.lesson import LessonsService, SubjectsService
 from services.exceptions.lessons import (CompliteLessonDateUncorrect,
                                          StudentBalanceEmpty)
 from handlers.states import lessons as lessons_states
@@ -107,12 +107,13 @@ async def add_lesson(
 
 
 @router.callback_query(data.LessonCommitViewCallbackData.filter())
-@provide_model_service(LessonsService)
+@provide_model_service(LessonsService, SubjectsService)
 async def lesson_creation_form_action(
         query: CallbackQuery,
         callback_data: data.LessonCommitViewCallbackData,
         state: FSMContext,
-        lessons_service: LessonsService):
+        lessons_service: LessonsService,
+        subjects_service: SubjectsService):
     action = [i for i in dir(callback_data) if i[0] != "_" and (getattr(callback_data, i) is True)].pop()
 
     data_: dict = await state.get_data()
@@ -131,6 +132,8 @@ async def lesson_creation_form_action(
                     ),
                     copies=int(factor)
                 )
+
+                subject = await subjects_service.repository.get(pk=data_.get("subject_id"))
             except Exception as e:
                 print(e)
                 return await query.message.edit_text(
@@ -141,6 +144,14 @@ async def lesson_creation_form_action(
             await query.message.edit_text(
                 text="✅ <b>Урок создан</b>",
             )
+
+            if subject.student.telegram_id:
+                await query.bot.send_message(
+                    chat_id=subject.student.telegram_id,
+                    text=f"⚠ <b>Ваш урок по предмету <i>{
+                        subject.title
+                    }</i> назначен, проверьте расписание и не пропустите его!</b>",
+                )
 
         case "make_free":
             await state.set_data(

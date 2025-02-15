@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 
 from models.student import Student, StudentPairRequest
+from models.lesson import Lesson
 from repositories.students import StudentsModelRepository
 from repositories.base import BaseModelRepository
 
@@ -91,3 +92,17 @@ class StudentsService(BaseModelService):
         )
 
         return True
+
+    @BaseModelRepository.provide_db_conn()
+    async def get_nearest_lesson(self, session: AsyncSession):
+        subjects = (await self._repository.get_by_telegram(
+            telegram_id=self._student_id,
+            session=session
+        )).subjects
+
+        try:
+            return (await session.execute(select(Lesson).filter(Lesson.subject_id.in_(
+                [s.id for s in subjects]
+            )).order_by(Lesson.date.desc()).limit(1))).one_or_none()[0]
+        except:
+            return None

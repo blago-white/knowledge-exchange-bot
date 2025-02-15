@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.dialog import Message
+from models.dialog import Message, SenderType
 from models.lesson import Subject
 from repositories.base import BaseModelRepository
 from repositories.dialog import DialogRepository
@@ -25,16 +25,37 @@ class DialogsService(BaseService):
         self._subjects_repository = (subjects_repository or
                                      self.subjects_model_repository)
 
+    async def show_all_chats(self, user, user_type: UserType) -> list[Message]:
+        if user_type == UserType.WORKER:
+            subjects = await self._subjects_repository.get_all(user_id=user.id)
+        elif user_type == UserType.STUDENT:
+            subjects = await self._subjects_repository.get_all(
+                user_id=user.telegram_id
+            )
+        else:
+            raise PermissionError()
+
+        return await self._dialogs_repository.get_previews_for_subjects(
+            subjects_ids=[s.id for s in subjects]
+        )
+
     @BaseModelRepository.provide_db_conn()
     async def add_message(self, session: AsyncSession,
                           sender_id: int,
-                          message: Message):
+                          message: Message) -> Message:
         await self._can_send_message(session=session,
                                      sender_id=sender_id,
                                      sender_role=message.sender,
                                      subject_id=message.subject_id)
 
-        await self.dialogs_repository.create(data=message)
+        message.sender = SenderType.STUDENT if message.sender == UserType.STUDENT else SenderType.WORKER
+
+        return await self.dialogs_repository.create(data=message)
+
+    async def get_messages(self, subject_id: int) -> list[Message]:
+        return await self._dialogs_repository.get_all_for_subject(
+            subject_id=subject_id
+        )
 
     @BaseModelRepository.provide_db_conn()
     async def _can_send_message(self, session: AsyncSession,
@@ -46,16 +67,13 @@ class DialogsService(BaseService):
 
         result: Subject = await self._subjects_repository.get(
             session=session, pk=subject_id,
-            exclude_related_cols=[Subject.sell_offers,
-                                  Subject.student_id
-                                  if sender_role.WORKER else
-                                  Subject.worker_id]
+            exclude_related_cols=[Subject.sell_offers]
         )
 
         assert (
-            result.worker_id == sender_id
-            if sender_role == UserType.WORKER else
-            result.student_id == sender_id
+            int(result.worker_id) == int(sender_id)
+            if sender_role == str(UserType.WORKER) else
+            int(result.student.telegram_id) == int(sender_id)
         ), PermissionError(
             "Cant send message, permission error"
         )

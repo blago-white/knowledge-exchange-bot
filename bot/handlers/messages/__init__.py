@@ -3,6 +3,7 @@ from .workers import router as WORKER_ROUTER
 from .lessons import router as LESSONS_ROUTER
 from .sales import router as SALES_ROUTER
 from .subject import router as SUBJECTS_ROUTER
+from .chat import router as CHATS_ROUTER
 
 __all__ = ["ROUTERS"]
 

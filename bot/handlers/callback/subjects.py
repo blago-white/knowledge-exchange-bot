@@ -57,6 +57,8 @@ async def edit_subject(
         query: CallbackQuery,
         callback_data: data.EditSubjectData,
         state: FSMContext):
+    await query.answer()
+
     if callback_data.open_menu:
         return await query.message.edit_reply_markup(
             reply_markup=get_subject_edit_kb(

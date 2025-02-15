@@ -57,8 +57,7 @@ class ShowLessonInfoData(CallbackData, prefix="lesson-info"):
 
 class ShowWeekSchedule(CallbackData, prefix="week-schedule"):
     week_number: int = 0
-    beta: bool = False
-    alpha: int = 49385394875
+    worker_view: bool = True
 
 
 class AddLessonData(CallbackData, prefix="lesson-add"):
@@ -102,6 +101,12 @@ class MyChatsListData(CallbackData, prefix="chats"):
     pass
 
 
+class SendMessageData(CallbackData, prefix="send-message"):
+    subject_id: int
+    parent_msg_id: int = 0
+    recipient_id: int
+
+
 class LessonCompliteData(CallbackData, prefix="complete-lesson"):
     lesson_id: int
 
@@ -125,3 +130,11 @@ class EditSubjectData(CallbackData, prefix="edit-subject"):
     subject_id: int = -1
     open_menu: bool = False
     edit_field: SubjectEditField = SubjectEditField.TITLE
+
+
+class MessageAnswerData(CallbackData, prefix="message-answer"):
+    sender_id: int
+
+
+class OpenChatData(CallbackData, prefix="open-chat"):
+    subject_id: int

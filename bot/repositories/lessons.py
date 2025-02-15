@@ -4,6 +4,7 @@ import typing
 from sqlalchemy import select, func, Integer, not_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.student import Student
 from models.lesson import Lesson, Subject
 
 from .base import DefaultModelRepository, BaseModelRepository
@@ -20,6 +21,18 @@ class LessonsModelRepository(DefaultModelRepository):
             Subject, Lesson.subject_id == Subject.id
         ).where(
             Subject.worker_id == worker_id,
+            self._model.date < end_week,
+            self._model.date >= start_week
+        ).order_by("date"))).scalars())
+
+    @BaseModelRepository.provide_db_conn()
+    async def get_student_week_lessons(self, student_id: int, session: AsyncSession) -> list[Lesson]:
+        start_week, end_week = self._get_week_borders()
+
+        return list((await session.execute(select(self._model).join(
+            Subject, Lesson.subject_id == Subject.id
+        ).where(
+            Student.telegram_id == student_id,
             self._model.date < end_week,
             self._model.date >= start_week
         ).order_by("date"))).scalars())

@@ -13,3 +13,14 @@ class DialogRepository(DefaultModelRepository):
         return (await session.execute(
             select(self._model).filter_by(subject_id=subject_id)
         )).scalars()
+
+    @DefaultModelRepository.provide_db_conn()
+    async def get_previews_for_subjects(
+            self, session: AsyncSession,
+            subjects_ids: list[int]
+    ):
+        return list((await session.execute(
+            select(self._model).filter(
+                Message.subject_id.in_(subjects_ids)
+            ).order_by(Message.subject_id).distinct(Message.subject_id)
+        )).scalars())

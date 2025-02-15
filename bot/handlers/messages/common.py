@@ -2,13 +2,13 @@ from aiogram import Router
 from aiogram.filters.command import CommandStart, CommandObject, Command
 from aiogram.types import Message
 
-from keyboards.inline import get_home_inline_kb
+from keyboards.inline import get_home_inline_kb, get_student_menu_kb
 from models.worker import Worker
 from services.worker import WorkersService
 from services.user import UserService, UserType
 from services.student import StudentsService
 from ..providers import provide_model_service
-from ..replies import START_MESSAGE, STUDENT_START_MESSAGE, STUDENT_NEXT_LESSON_LABEL_EMPTY
+from ..replies import START_MESSAGE, STUDENT_START_MESSAGE, STUDENT_NEXT_LESSON_LABEL_EMPTY, STUDENT_NEXT_LESSON_LABEL_EXISTS
 from ..common.utils.messages import (generate_main_stats_message_text,
                                      generate_student_main_message)
 
@@ -58,17 +58,21 @@ async def start(message: Message,
             text=f"🔰 Рады вас видеть, {message.from_user.first_name} — /start"
         )
     elif user_type == UserType.STUDENT:
-        next_lesson = None
+        students_service.student_id = message.chat.id
+        next_lesson = await students_service.get_nearest_lesson()
+
+        print(next_lesson, type(next_lesson))
 
         await message.bot.send_message(
             chat_id=message.from_user.id,
             text=generate_student_main_message(
                 next_lesson=next_lesson,
-                next_lesson_template=STUDENT_NEXT_LESSON_LABEL_EMPTY,
+                next_lesson_template=STUDENT_NEXT_LESSON_LABEL_EXISTS if next_lesson else STUDENT_NEXT_LESSON_LABEL_EMPTY,
                 student=user,
                 template=STUDENT_START_MESSAGE,
-                meet_link=None
+                meet_link=next_lesson.subject.worker.meet_link if next_lesson else None
             ),
+            reply_markup=get_student_menu_kb()
         )
     # elif user_type == UserType.UNKNOWN:
     #     await message.bot.send_message(

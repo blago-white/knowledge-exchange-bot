@@ -1,4 +1,6 @@
 import datetime
+import pytz
+
 from enum import Enum
 import sqlalchemy as sa
 
@@ -21,6 +23,7 @@ class SenderType(Enum):
 class Message(Base):
     __tablename__ = "dialog_message"
 
+    id: Mapped[int] = mapped_column(primary_key=True)
     subject_id: Mapped[int] = mapped_column(
         sa.ForeignKey("subject.id", ondelete="SET NULL")
     )
@@ -35,3 +38,13 @@ class Message(Base):
         back_populates="messages",
         lazy="joined"
     )
+
+    @property
+    def display_sended_at(self) -> str:
+        lesson_datetime_format = "%d.%m %H:%M"
+        lesson_date_msc = self.sended_at.astimezone(pytz.timezone("Europe/Moscow"))
+
+        try:
+            return lesson_date_msc.strftime(lesson_datetime_format)
+        except:
+            return
