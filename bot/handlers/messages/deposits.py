@@ -14,7 +14,7 @@ router = Router(name=__name__)
 async def enter_deposit_amount(message: Message,
                                state: FSMContext):
     try:
-        amount = int(message)
+        amount = int(message.text)
 
         if amount < 100 or amount > 30000:
             raise ValueError("<b>Неверная сумма</b>, она должна быть не менее 100₽ и не более 30к₽")
@@ -27,7 +27,7 @@ async def enter_deposit_amount(message: Message,
             text="❌ <b>Кажется, вы ввели не число</b> (либо не целое число, а такое принять не можем)"
         )
 
-    data = state.get_data()
+    data = await state.get_data()
 
     data |= {"amount": amount}
 

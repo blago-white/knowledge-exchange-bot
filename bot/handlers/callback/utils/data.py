@@ -147,3 +147,8 @@ class MakeDepositData(CallbackData, prefix="deposit"):
 
 class DepositMakingApprovationData(CallbackData, prefix="deposit-approve"):
     approve: bool = False
+
+
+class DepositPaymentApproveData(CallbackData, prefix="deposit-approve"):
+    admin_view: bool = False
+    to_admin_deposit_id: int = -1

@@ -1,6 +1,6 @@
-from aiogram.fsm.state import State
+from aiogram.fsm.state import StatesGroup, State
 
 
-class DepositFormState(State):
+class DepositFormState(StatesGroup):
     set_amount = State()
     approvation = State()

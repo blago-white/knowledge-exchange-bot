@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import (async_sessionmaker,
                                     AsyncSession,
                                     create_async_engine)
 
-from . import dialog, course, lesson, student, worker
+from . import dialog, course, lesson, student, worker, deposits
 
 
 __all__ = ["DBSessionAccesObject"]
