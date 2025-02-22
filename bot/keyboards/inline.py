@@ -26,7 +26,7 @@ def get_home_inline_kb():
                 ).pack()
             ), InlineKeyboardButton(
                 text="📕 Мои Ученики",
-                callback_data=data.GetWorkerSubjectsData(
+                callback_data=data.GetSubjectsData(
                     filter=data.WorkerSubjectsFilters.ALL
                 ).pack()
             ), InlineKeyboardButton(
@@ -154,7 +154,7 @@ def get_subject_details_kb(
             )],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
-                callback_data=data.GetWorkerSubjectsData(
+                callback_data=data.GetSubjectsData(
                     filter=data.WorkerSubjectsFilters.ALL
                 ).pack()
             ), InlineKeyboardButton(
@@ -192,7 +192,7 @@ def get_subject_edit_kb(subject_id: int):
             )],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
-                callback_data=data.GetWorkerSubjectsData(
+                callback_data=data.GetSubjectsData(
                     filter=data.WorkerSubjectsFilters.ALL
                 ).pack()
             ), InlineKeyboardButton(
@@ -253,7 +253,7 @@ def get_subject_lessons_kb(
             )],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
-                callback_data=data.GetWorkerSubjectsData(
+                callback_data=data.GetSubjectsData(
                     filter=data.WorkerSubjectsFilters.ALL
                 ).pack()
             ), InlineKeyboardButton(
@@ -304,7 +304,7 @@ def get_lesson_data_inline_kb(
             )] if not seller_view else [],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
-                callback_data=data.GetWorkerSubjectsData(
+                callback_data=data.GetSubjectsData(
                     filter=data.WorkerSubjectsFilters.ALL
                 ).pack()
             ), InlineKeyboardButton(
@@ -565,7 +565,7 @@ def get_edit_lesson_kb(lesson_id: int, subject_id: int):
             )],
             [InlineKeyboardButton(
                 text="📕⬅ К списку учеников",
-                callback_data=data.GetWorkerSubjectsData(
+                callback_data=data.GetSubjectsData(
                     filter=data.WorkerSubjectsFilters.ALL
                 ).pack()
             ), InlineKeyboardButton(
@@ -601,7 +601,10 @@ def get_student_menu_kb():
         )],
         [InlineKeyboardButton(
             text="📕 Мои предметы",
-            callback_data=data.ShowWeekSchedule().pack()
+            callback_data=data.GetSubjectsData(
+                filter=data.WorkerSubjectsFilters.ALL,
+                worker_view=False
+            ).pack()
         ), InlineKeyboardButton(
             text="📆 Расписание",
             callback_data=data.ShowWeekSchedule(worker_view=False).pack()

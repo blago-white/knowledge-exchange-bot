@@ -14,7 +14,7 @@ from services.lesson import SubjectsService, Subject, Lesson, LessonsService
 from services.worker import WorkersService
 from ..callback.utils.data import (RenderProfileData,
                                    UpdateProfileInfoData,
-                                   GetWorkerSubjectsData,
+                                   GetSubjectsData,
                                    TO_HOME_DATA,
                                    StudentProfileData,
                                    GetSubjectLessonsData,
@@ -81,36 +81,6 @@ async def update_profile_info(
     )
 
 
-@router.callback_query(GetWorkerSubjectsData.filter(
-    F.filter != None
-))
-@provide_model_service(SubjectsService)
-async def update_profile_info(
-        query: CallbackQuery,
-        callback_data: UpdateProfileInfoData,
-        state: FSMContext,
-        subjects_service: SubjectsService):
-    await query.answer()
-
-    subjects: list[
-        Subject] = await subjects_service.repository.get_all_for_worker(
-        worker_id=query.message.chat.id
-    )
-
-    if not subjects or not len(subjects):
-        return await query.message.edit_text(
-            text="👌 <b>У вас еще нет учеников, но скоро они обязательно появятся:)</b>",
-            reply_markup=get_subjects_table_kb(subjects=subjects)
-        )
-
-    await query.message.edit_text(
-        text="📕 <b>Тут все ваши ученики:</b>",
-        reply_markup=get_subjects_table_kb(
-            subjects=subjects
-        )
-    )
-
-
 @router.callback_query(StudentProfileData.filter(
     F.subject_id != None
 ))
@@ -152,7 +122,7 @@ async def show_subject_profile(
         text=f"📍 {selled_prefix} "
              f"<b>{subject.student.name} [{subject.student.city}]</b>\n"
              f"📕 Предмет — <i>{subject.title}\n"
-             f"💰 Баланс ученика — {subject.student.balance}₽"
+             f"💰 Баланс ученика — {subject.student.balance}₽\n"
              f"🕑 Ставка — {subject.rate}₽/ч</i>\n"
              f"👤 О ученике — <i>{
              subject.student.description or 'пока ничего не известно('

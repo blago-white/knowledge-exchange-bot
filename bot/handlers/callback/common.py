@@ -1,25 +1,32 @@
-from aiogram import Router, F
-from aiogram.types.input_file import InputFile, FSInputFile
-from aiogram.filters.callback_data import CallbackData, CallbackQuery
+from aiogram import F
+from aiogram.dispatcher.router import Router
+from aiogram.filters.callback_data import CallbackQuery
 from aiogram.fsm.context import FSMContext
+from aiogram.types.input_file import FSInputFile
 
+from keyboards.inline import (get_home_inline_kb,
+                              get_subjects_table_kb)
+from keyboards.inline import get_student_menu_kb
+from services.lesson import SubjectsService, Subject
+from services.student import StudentsService
 from services.user import UserService, UserType
 from services.worker import WorkersService
-from services.student import StudentsService
-from keyboards.inline import get_home_inline_kb, get_student_menu_kb
-from handlers.providers import provide_model_service
-
-from ..replies import (START_MESSAGE,
-                       STUDENT_START_MESSAGE,
+from .utils import data
+from ..callback.utils.data import (UpdateProfileInfoData,
+                                   GetSubjectsData,
+                                   TO_HOME_DATA)
+from ..common.utils.messages import generate_main_stats_message_text
+from ..common.utils.messages import generate_student_main_message
+from ..providers import provide_model_service
+from ..replies import START_MESSAGE
+from ..replies import (STUDENT_START_MESSAGE,
                        STUDENT_NEXT_LESSON_LABEL_EMPTY,
                        STUDENT_NEXT_LESSON_LABEL_EXISTS)
-from ..common.utils.messages import generate_main_stats_message_text, generate_student_main_message
-from .utils.data import ABOUT_INFO_DATA, TO_HOME_DATA
 
 router = Router(name=__name__)
 
 
-@router.callback_query(F.data == ABOUT_INFO_DATA)
+@router.callback_query(F.data == data.ABOUT_INFO_DATA)
 async def show_about(query: CallbackQuery):
     await query.message.bot.send_photo(
         chat_id=query.message.chat.id,
@@ -51,7 +58,7 @@ async def show_about(query: CallbackQuery):
     )
 
 
-@router.callback_query(F.data == TO_HOME_DATA)
+@router.callback_query(F.data == data.TO_HOME_DATA)
 @provide_model_service(UserService, WorkersService, StudentsService)
 async def go_home_screen(
         query: CallbackQuery,
@@ -95,3 +102,41 @@ async def go_home_screen(
             message_id=query.message.message_id,
             chat_id=query.message.chat.id,
         )
+
+
+@router.callback_query(data.GetSubjectsData.filter())
+@provide_model_service(SubjectsService)
+async def show_subjects(
+        query: CallbackQuery,
+        callback_data: data.GetSubjectsData,
+        state: FSMContext,
+        subjects_service: SubjectsService):
+    await query.answer()
+
+    if callback_data.worker_view:
+        subjects: list[Subject] = await subjects_service.repository.get_all_for_worker(
+            worker_id=query.message.chat.id
+        )
+    else:
+        subjects: list[Subject] = await subjects_service.repository.get_all_for_student(
+            student_id=query.message.chat.id
+        )
+
+    if not subjects or not len(subjects):
+        if callback_data.worker_view:
+            return await query.message.edit_text(
+                text="👌 <b>У вас еще нет учеников, но скоро они обязательно появятся:)</b>",
+                reply_markup=get_subjects_table_kb(subjects=subjects)
+            )
+
+        return await query.message.edit_text(
+                text="🤷 <b>У вас еще нет репетиторов</b>",
+                reply_markup=get_subjects_table_kb(subjects=subjects)
+        )
+
+    await query.message.edit_text(
+        text=f"📕 <b>Тут все ваши {"ученики" if callback_data.worker_view else "курсы"}:</b>",
+        reply_markup=get_subjects_table_kb(
+            subjects=subjects
+        )
+    )

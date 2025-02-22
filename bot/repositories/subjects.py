@@ -34,6 +34,13 @@ class SubjectsModelRepository(DefaultModelRepository):
         ))).scalars())
 
     @BaseModelRepository.provide_db_conn()
+    async def get_all_for_student(self, student_id: int,
+                                 session: AsyncSession) -> list[Subject]:
+        return list((await session.execute(select(self._model).filter(
+            Student.telegram_id == student_id
+        ))).scalars())
+
+    @BaseModelRepository.provide_db_conn()
     async def get_all(self, session: AsyncSession,
                       user_id: int = None):
         query = select(self._model)

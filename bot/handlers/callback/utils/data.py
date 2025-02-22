@@ -34,8 +34,9 @@ class UpdateProfileInfoData(CallbackData, prefix="profile-update"):
     update_field: ProfileUpdateField
 
 
-class GetWorkerSubjectsData(CallbackData, prefix="subjects-all"):
+class GetSubjectsData(CallbackData, prefix="subjects-all"):
     filter: WorkerSubjectsFilters
+    worker_view: bool = True
 
 
 class StudentProfileData(CallbackData, prefix="student"):
