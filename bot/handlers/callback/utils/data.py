@@ -139,3 +139,11 @@ class MessageAnswerData(CallbackData, prefix="message-answer"):
 
 class OpenChatData(CallbackData, prefix="open-chat"):
     subject_id: int
+
+
+class MakeDepositData(CallbackData, prefix="deposit"):
+    pass
+
+
+class DepositMakingApprovationData(CallbackData, prefix="deposit-approve"):
+    approve: bool = False

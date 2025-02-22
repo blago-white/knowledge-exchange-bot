@@ -597,7 +597,7 @@ def get_student_menu_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
             text="➕ Пополнить баланс",
-            callback_data=data.ShowWeekSchedule().pack()
+            callback_data=data.MakeDepositData().pack()
         )],
         [InlineKeyboardButton(
             text="📕 Мои предметы",
