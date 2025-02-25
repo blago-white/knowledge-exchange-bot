@@ -46,7 +46,6 @@ class WorkersService(BaseModelService):
         except:
             return False
 
-
     async def get_or_create(self, username: str, tag: str) -> tuple[bool, Worker]:
         try:
             result = await self.workers_repository.get(pk=self._worker_id)
@@ -87,14 +86,15 @@ class WorkersService(BaseModelService):
             cost: int):
         await self._can_sell_subject(subject_id=subject_id)
 
-        if not self.is_worker:
+        if not await self.is_worker:
             raise PermissionError("Buyer is not registered as worker!")
 
         return await self.sell_offers_repository.create(offer=StudentSellOffer(
             recipient_id=buyer_worker_id,
             subject_id=subject_id,
             seller_id=self._worker_id,
-            cost=cost
+            cost=cost + (cost*0.25),
+            extra_charge=cost*.25
         ))
 
     async def get_selled_student_lessons(
@@ -209,6 +209,14 @@ class WorkersService(BaseModelService):
             raise e
 
         return accepted_offer
+
+    async def commit_withdraw(self, amount: int):
+        worker = await self.workers_repository.get(pk=self._worker_id)
+
+        await self.workers_repository.update(
+            pk=self._worker_id,
+            balance=worker.balance - amount
+        )
 
     async def _check_selled_subject(self, subject_id: int):
         if not self.sell_offers_repository.is_selled(

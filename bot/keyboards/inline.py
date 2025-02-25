@@ -35,7 +35,7 @@ def get_home_inline_kb():
             )],
             [InlineKeyboardButton(
                 text="💸 Вывести",
-                callback_data="None"
+                callback_data=data.MakeWithdrawData().pack()
             ), InlineKeyboardButton(
                 text="🗃 Проданные Ученики",
                 callback_data=data.SelledStudentsList().pack()

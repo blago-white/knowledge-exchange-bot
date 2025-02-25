@@ -303,6 +303,11 @@ async def complete_lesson(
                 chat_id=result.seller_id,
                 text="🔥 <b>Ученик полностью оплачен!</b>"
             )
+
+            await bot.send_message(
+                chat_id=935570478,
+                text=f"🔥 Поступление профита бота {result.offer.extra_charge}р"
+            )
         else:
             await bot.send_message(
                 chat_id=chat_id,

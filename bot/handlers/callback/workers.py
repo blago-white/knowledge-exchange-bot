@@ -9,6 +9,7 @@ from keyboards.inline import (get_home_inline_kb,
                               get_subject_details_kb,
                               get_subject_lessons_kb,
                               get_week_schedule_keyboard)
+from keyboards.workers import get_withdraw_kb
 from models.worker import Worker
 from services.lesson import SubjectsService, Subject, Lesson, LessonsService
 from services.worker import WorkersService
@@ -18,7 +19,9 @@ from ..callback.utils.data import (RenderProfileData,
                                    TO_HOME_DATA,
                                    StudentProfileData,
                                    GetSubjectLessonsData,
-                                   ShowWeekSchedule)
+                                   ShowWeekSchedule,
+                                   MakeWithdrawData,
+                                   WithdrawSendedData)
 from ..common.utils.messages import generate_main_stats_message_text
 from ..providers import provide_model_service
 from ..replies import ACCOUNT_DATA_MESSAGE, START_MESSAGE
@@ -206,4 +209,65 @@ async def show_week_schedule(
     await query.message.edit_text(
         text=f"📆 <b>{"А вот ваши уроки на неделю:" if lessons else "На этой неделе уроков не планируется!"}</b>",
         reply_markup=get_week_schedule_keyboard(lessons=lessons)
+    )
+
+
+@router.callback_query(MakeWithdrawData.filter())
+@provide_model_service(WorkersService)
+async def request_withdraw(
+        query: CallbackQuery,
+        callback_data: ShowWeekSchedule,
+        state: FSMContext,
+        workers_service: WorkersService):
+    await query.answer()
+
+    try:
+        worker: Worker = await workers_service.repository.get(pk=query.message.chat.id)
+    except:
+        return await query.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="❌ Произошла ошибка, для выплаты напишите в тп - /support"
+        )
+
+    if worker.balance == 0:
+        return await query.bot.send_message(
+            chat_id=query.message.chat.id,
+            text="🔴 <b>Ваш баланс равен нулю</b>, проводите уроки и тогда сможете ввыводить деньги"
+        )
+
+    await query.bot.send_message(chat_id=query.message.chat.id,
+                                 text="🟢 <b>Ожидайте, в ближайшее время с вами свяжется администратор!</b>")
+
+    await query.bot.send_message(
+        chat_id=935570478,
+        text=f"❗❗❗ Репетитор tg://user?id={query.message.chat.id} запросил вывод "
+             f"средств \n\n<b>"
+             f"Баланс сейчас - {worker.balance}\n"
+             f"Карта выплат - {worker.bank_card_number}\n"
+             f"Телефон - {worker.phone_number}</b>",
+        reply_markup=get_withdraw_kb(worker_id=worker.id,
+                                     amount=worker.balance)
+    )
+
+
+@router.callback_query(WithdrawSendedData.filter())
+@provide_model_service(WorkersService)
+async def withdraw_sended(
+        query: CallbackQuery,
+        callback_data: WithdrawSendedData,
+        state: FSMContext,
+        workers_service: WorkersService):
+    try:
+        await workers_service.commit_withdraw(amount=callback_data.amount)
+    except Exception as e:
+        return await query.answer("📛 Не удалось применить выплату")
+
+    await query.message.edit_text(
+        text=f"✅ <b>Выплата {callback_data.amount} RUB. репетитору #{callback_data.worker_id} отправлена</b>"
+    )
+
+    await query.bot.send_message(
+        chat_id=callback_data.worker_id,
+        text=f"✅ Вам отправлена выплата на сумму {callback_data.amount} RUB\n\n"
+             f"<i>При любых вопросах обращайтесь в /support</i>"
     )

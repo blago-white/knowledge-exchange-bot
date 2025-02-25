@@ -81,6 +81,11 @@ class MakeWithdrawData(CallbackData, prefix="make-withdraw"):
     pass
 
 
+class WithdrawSendedData(CallbackData, prefix="withdraw-complete"):
+    worker_id: int
+    amount: int
+
+
 class SelledStudentsList(CallbackData, prefix="selled-list"):
     pass
 

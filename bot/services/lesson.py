@@ -7,6 +7,7 @@ from repositories.lessons import LessonsModelRepository
 from repositories.subjects import SubjectsModelRepository
 from repositories.workers import WorkersRepository
 from repositories.students import StudentsSellOffersModelRepository
+from repositories.profit import AppProfitRepository
 from repositories.base import BaseModelRepository
 
 from .transfer.subjects import SubjectsInitializingData
@@ -19,6 +20,7 @@ class LessonsService(BaseModelService):
     _repository = LessonsModelRepository()
     workers_repository = WorkersRepository()
     sell_offers_repository = StudentsSellOffersModelRepository()
+    app_profit_repository = AppProfitRepository()
 
     _lesson_id: int | None
 
@@ -61,10 +63,7 @@ class LessonsService(BaseModelService):
             raise PermissionError("You not teacher!")
 
         lesson_rate = lesson.overriten_rate or lesson.subject.rate
-        print(lesson.overriten_rate or lesson.subject.rate)
         lesson_price = lesson_rate * (lesson.duration / 60) * int(not lesson.is_free)
-
-        print(f"LESSON PRICE: {lesson_price} = {lesson_rate} * {lesson.duration} / 60")
 
         await self._validate_complition(lesson=lesson,
                                         student=lesson.subject.student,
@@ -92,6 +91,10 @@ class LessonsService(BaseModelService):
                     offer.paid_total_at = datetime.datetime.now()
 
                     complete_result.paid_total_now = True
+
+                    await self.app_profit_repository.add(
+                        amount=offer.extra_charge
+                    )
 
                 offer.seller.balance += lesson_price
                 offer.paid_sum += lesson_price

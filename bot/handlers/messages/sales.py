@@ -75,6 +75,9 @@ async def enter_cost(
     await state.set_state()
 
     await message.reply(
-        text="✔ Так, форму заполнили, вы подтверждаете продажу?",
+        text="✔ Так, форму заполнили\n\n"
+             f"Вы указали цену продажи - {cost}р, <b>Знания.Про</b> берет процент - 25%, "
+             f"итого покупателю покупка обойдется в {cost + cost*0.25}р\n"
+             "вы подтверждаете продажу?",
         reply_markup=get_sell_approve_kb()
     )

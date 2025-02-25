@@ -74,7 +74,7 @@ class StudentSellOffer(Base):
         "subject.id", ondelete="SET NULL"
     ))
 
-    cost: Mapped[int]
+    cost: Mapped[int] = mapped_column()
     is_accepted: Mapped[bool] = mapped_column(default=False)
     is_paid: Mapped[bool] = mapped_column(default=False)
     paid_sum: Mapped[float] = mapped_column(default=0.0)
@@ -84,6 +84,9 @@ class StudentSellOffer(Base):
     )
     paid_total_at: Mapped[datetime.datetime | None] = mapped_column(
         sa.DateTime(timezone=True)
+    )
+    extra_charge: Mapped[float] = mapped_column(
+        default=0
     )
 
     recipient: Mapped["Worker"] = relationship(
@@ -102,6 +105,11 @@ class StudentSellOffer(Base):
         back_populates="sell_offers",
         lazy="joined",
         foreign_keys=[subject_id]
+    )
+
+    __table_args__ = (
+        sa.CheckConstraint(extra_charge >= 0, name='extra_charge_gte_0'),
+        sa.CheckConstraint(extra_charge <= cost, name='extra_charge_lt_cost'),
     )
 
     def __repr__(self):
